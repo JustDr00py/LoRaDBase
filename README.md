@@ -1,6 +1,6 @@
 # LoRaDBase
 
-A complete LoRaWAN data management solution combining a high-performance time-series database with an intuitive web interface.
+A complete LoRaWAN data management solution combining a high-performance time-series database with an intuitive web interface. [Why not use a Generic TSDB?](https://github.com/JustDr00py/LoRaDBase/blob/main/LoRaDB/PITCH.md)
 
 ## Overview
 
