@@ -1,0 +1,21 @@
+# Rust build artifacts
+/target
+/benches/target
+
+# Environment variables
+.env
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug files
+*.pdb
+
+# Backup files
+*.bak
+*.tmp

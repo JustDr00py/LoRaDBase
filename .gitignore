@@ -1,0 +1,204 @@
+# ============================================================================
+# LoRaDBase Combined .gitignore
+# Covers both LoRaDB (Rust) and LoRaDB-UI (Node.js/React) projects
+# ============================================================================
+
+# ============================================================================
+# Environment & Secrets
+# ============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# ============================================================================
+# LoRaDB (Rust) - Backend Database
+# ============================================================================
+
+# Rust build artifacts
+/LoRaDB/target/
+/LoRaDB/benches/target/
+**/target/
+**/*.rs.bk
+Cargo.lock
+
+# Rust debug files
+*.pdb
+
+# ============================================================================
+# LoRaDB-UI (Node.js/React) - Frontend
+# ============================================================================
+
+# Dependencies
+**/node_modules/
+**/jspm_packages/
+
+# Production builds
+**/dist/
+**/build/
+*.local
+
+# Testing
+**/coverage/
+*.lcov
+.nyc_output
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+**/dist-ssr/
+*.local
+
+# ============================================================================
+# Docker
+# ============================================================================
+*.tar
+*.tar.gz
+docker-compose.override.yml
+
+# ============================================================================
+# IDE & Editor Files
+# ============================================================================
+
+# VSCode
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# JetBrains IDEs (IntelliJ, WebStorm, RustRover, CLion)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ============================================================================
+# Operating System Files
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# Temporary & Backup Files
+# ============================================================================
+*.bak
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+
+# ============================================================================
+# Data & Runtime Files
+# ============================================================================
+
+# LoRaDB data directory (if running locally outside Docker)
+/data/
+/wal/
+*.wal
+*.sst
+api_tokens.json
+retention_policies.json
+
+# SSL/TLS Certificates (keep example files, ignore actual certs)
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+!*example*.pem
+!*sample*.pem
+
+# ============================================================================
+# Test & Development
+# ============================================================================
+test-data/
+*.test
+*.spec
+
+# ============================================================================
+# Documentation Generated Files
+# ============================================================================
+/docs/_build/
+/site/
+
+# ============================================================================
+# Miscellaneous
+# ============================================================================
+*.pid
+*.seed
+*.pid.lock
+.cache/
+*.cache
+
+# Package manager lock files (optional - uncomment if needed)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
