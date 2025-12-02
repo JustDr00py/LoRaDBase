@@ -210,16 +210,32 @@ LoRaDB uses an LSM-tree storage engine with multiple persistence layers:
 └── api_tokens.json   # API token store
 ```
 
-Data is persisted in the `loradb-data` Docker volume. To back up your data:
+Data is persisted in the `loradb-data` Docker volume.
+
+**Backup procedure:**
 ```bash
-# Backup
+# Create backup (container can be running)
 docker run --rm -v loradb_loradb-data:/data -v $(pwd):/backup \
   alpine tar czf /backup/loradb-backup.tar.gz -C /data .
+```
 
-# Restore
+**Restore procedure:**
+```bash
+# IMPORTANT: Stop the container first
+docker compose down
+
+# Clear existing data (optional but recommended)
+docker run --rm -v loradb_loradb-data:/data alpine rm -rf /data/*
+
+# Restore backup
 docker run --rm -v loradb_loradb-data:/data -v $(pwd):/backup \
   alpine tar xzf /backup/loradb-backup.tar.gz -C /data
+
+# Start the container
+docker compose up -d
 ```
+
+**Why stop the container?** If the container is running during restore, it will immediately compact the restored SSTables into new files and delete the originals, resulting in data loss.
 
 ### Option 2: Build from Source
 

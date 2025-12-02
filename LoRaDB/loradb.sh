@@ -27,6 +27,7 @@ show_help() {
     echo "  health              - Check health endpoint"
     echo "  data-dir            - Show data directory path"
     echo "  backup              - Create backup of data"
+    echo "  restore <file>      - Restore from backup (stops container)"
     echo "  clean-wal           - Clean WAL (WARNING: loses uncommitted data)"
     echo ""
 }
@@ -98,6 +99,51 @@ case "$1" in
         docker compose cp loradb:/tmp/backup.tar.gz "./$backup_name"
         docker compose exec loradb rm /tmp/backup.tar.gz
         echo -e "${GREEN}✓${NC} Backup created: $backup_name"
+        ;;
+    restore)
+        if [ -z "$2" ]; then
+            echo "Usage: ./loradb.sh restore <backup_file>"
+            echo "Example: ./loradb.sh restore loradb_backup_20251202_051530.tar.gz"
+            exit 1
+        fi
+
+        backup_file="$2"
+        if [ ! -f "$backup_file" ]; then
+            echo -e "${YELLOW}Error: Backup file not found: $backup_file${NC}"
+            exit 1
+        fi
+
+        echo -e "${YELLOW}WARNING: This will:${NC}"
+        echo "  1. Stop LoRaDB"
+        echo "  2. Delete all existing data"
+        echo "  3. Restore from: $backup_file"
+        echo "  4. Restart LoRaDB"
+        echo ""
+        read -p "Are you sure? (type 'yes' to confirm): " confirm
+
+        if [ "$confirm" != "yes" ]; then
+            echo "Cancelled"
+            exit 0
+        fi
+
+        echo "Stopping LoRaDB..."
+        docker compose down
+
+        echo "Clearing existing data..."
+        docker run --rm -v loradb_loradb-data:/data alpine rm -rf /data/*
+
+        echo "Restoring from backup..."
+        docker run --rm -v loradb_loradb-data:/data -v "$(pwd):/backup" \
+            alpine tar xzf "/backup/$backup_file" -C /data
+
+        echo "Starting LoRaDB..."
+        docker compose up -d
+
+        echo "Waiting for container to start..."
+        sleep 3
+
+        echo -e "${GREEN}✓${NC} Restore complete. Showing logs:"
+        docker compose logs --tail=30 loradb
         ;;
     clean-wal)
         echo -e "${YELLOW}WARNING: This will delete the WAL and lose uncommitted data!${NC}"

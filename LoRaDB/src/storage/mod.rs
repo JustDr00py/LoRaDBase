@@ -522,15 +522,15 @@ impl StorageEngine {
         info!("Starting retention enforcement background task");
 
         tokio::spawn(async move {
+            // Get initial check interval from retention manager
+            let check_interval_hours = self.retention_manager.get_check_interval_hours().await;
+
+            let mut interval = tokio::time::interval(
+                tokio::time::Duration::from_secs(check_interval_hours * 3600)
+            );
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
             loop {
-                // Get current check interval from retention manager
-                let check_interval_hours = self.retention_manager.get_check_interval_hours().await;
-
-                let mut interval = tokio::time::interval(
-                    tokio::time::Duration::from_secs(check_interval_hours * 3600)
-                );
-                interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-
                 interval.tick().await;
 
                 info!("Running retention policy enforcement");

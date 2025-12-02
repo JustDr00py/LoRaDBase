@@ -17,6 +17,8 @@ export const QueryInterface: React.FC = () => {
   const [useBuilder, setUseBuilder] = useState(true);
   const [customFieldsInput, setCustomFieldsInput] = useState('');
   const [executedQuery, setExecutedQuery] = useState<string>(''); // Track the executed query
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [config, setConfig] = useState<QueryConfig>({
     devEui: initialDevEui,
     frameType: 'all',
@@ -63,6 +65,22 @@ export const QueryInterface: React.FC = () => {
 
   const updateConfig = (updates: Partial<QueryConfig>) => {
     setConfig({ ...config, ...updates });
+  };
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc'); // Default to descending for dates (most recent first)
+    }
+  };
+
+  const SortIcon: React.FC<{ field: string }> = ({ field }) => {
+    if (sortField !== field) {
+      return <span style={{ opacity: 0.3, marginLeft: '4px' }}>↕</span>;
+    }
+    return <span style={{ marginLeft: '4px' }}>{sortDirection === 'asc' ? '↑' : '↓'}</span>;
   };
 
   return (
@@ -222,6 +240,36 @@ export const QueryInterface: React.FC = () => {
         const selectedFields = parseSelectFields(executedQuery);
         const useDynamicColumns = selectedFields && selectedFields.length > 0 && !['*', 'uplink', 'downlink', 'join', 'decoded_payload'].includes(selectedFields[0]);
 
+        // Sort frames if a sort field is selected
+        let sortedFrames = [...mutation.data.frames];
+        if (sortField) {
+          sortedFrames = sortedFrames.sort((a, b) => {
+            const frameDataA = a.Uplink || a.Downlink || a.Join || a;
+            const frameDataB = b.Uplink || b.Downlink || b.Join || b;
+
+            let valueA = frameDataA?.[sortField] ?? a?.[sortField];
+            let valueB = frameDataB?.[sortField] ?? b?.[sortField];
+
+            // If direct key lookup fails, try nested navigation
+            if (valueA === undefined) {
+              valueA = getNestedValue(frameDataA, sortField) ?? getNestedValue(a, sortField);
+            }
+            if (valueB === undefined) {
+              valueB = getNestedValue(frameDataB, sortField) ?? getNestedValue(b, sortField);
+            }
+
+            // Handle null/undefined values
+            if (valueA == null && valueB == null) return 0;
+            if (valueA == null) return sortDirection === 'asc' ? 1 : -1;
+            if (valueB == null) return sortDirection === 'asc' ? -1 : 1;
+
+            // Compare values
+            if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+            if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+          });
+        }
+
         return (
           <div className="card">
             <div className="card-header">Results</div>
@@ -251,21 +299,42 @@ export const QueryInterface: React.FC = () => {
                     {useDynamicColumns && selectedFields ? (
                       // Dynamic columns based on SELECT fields
                       selectedFields.map((field, i) => (
-                        <th key={i}>{formatColumnHeader(field)}</th>
+                        <th
+                          key={i}
+                          onClick={() => handleSort(field)}
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                        >
+                          {formatColumnHeader(field)} <SortIcon field={field} />
+                        </th>
                       ))
                     ) : (
                       // Default columns for wildcard or frame type queries
                       <>
-                        <th>Received At</th>
-                        <th>F Port</th>
-                        <th>F Cnt</th>
+                        <th
+                          onClick={() => handleSort('received_at')}
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                        >
+                          Received At <SortIcon field="received_at" />
+                        </th>
+                        <th
+                          onClick={() => handleSort('f_port')}
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                        >
+                          F Port <SortIcon field="f_port" />
+                        </th>
+                        <th
+                          onClick={() => handleSort('f_cnt')}
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                        >
+                          F Cnt <SortIcon field="f_cnt" />
+                        </th>
                         <th>{config.frameType === 'decoded_payload' ? 'Decoded Payload' : 'Data'}</th>
                       </>
                     )}
                   </tr>
                 </thead>
                 <tbody>
-                  {mutation.data.frames.map((frame, i) => {
+                  {sortedFrames.map((frame, i) => {
                     // Extract actual frame data from nested structure (Uplink, Downlink, Join)
                     // Or use the frame directly if it's not nested
                     const frameData = frame.Uplink || frame.Downlink || frame.Join || frame;
