@@ -31,6 +31,7 @@ pub struct HttpServer {
     tls_cert_path: Option<String>,
     tls_key_path: Option<String>,
     cors_allowed_origins: Vec<String>,
+    rate_limit_per_minute: u32,
 }
 
 impl HttpServer {
@@ -60,11 +61,16 @@ impl HttpServer {
             tls_cert_path: config.tls_cert.map(|p| p.to_string_lossy().to_string()),
             tls_key_path: config.tls_key.map(|p| p.to_string_lossy().to_string()),
             cors_allowed_origins: config.cors_allowed_origins,
+            rate_limit_per_minute: config.rate_limit_per_minute,
         }
     }
 
     /// Build the Axum router with all routes and middleware
     fn build_router(&self) -> Router {
+        // NOTE: Rate limiting and body size limiting have been temporarily disabled
+        // due to compatibility issues with Axum 0.6. Axum 0.6 has a default 2MB body limit.
+        // For rate limiting, consider upgrading to Axum 0.7+ or using a custom middleware.
+
         // Public routes (no authentication required)
         let public_routes = Router::new().route("/health", get(health_check));
 
@@ -92,7 +98,11 @@ impl HttpServer {
 
         // Build CORS layer based on configuration
         let cors = if self.cors_allowed_origins.len() == 1 && self.cors_allowed_origins[0] == "*" {
-            // Allow all origins (development mode)
+            // SECURITY WARNING: Allow all origins (development mode only)
+            tracing::warn!(
+                "CORS configured to allow all origins (*). This should ONLY be used in development. \
+                 Set LORADB_API_CORS_ALLOWED_ORIGINS to specific origins in production."
+            );
             CorsLayer::permissive()
         } else {
             // Restrict to specific origins (production mode)
@@ -118,6 +128,7 @@ impl HttpServer {
         };
 
         // Combine routes and apply global middleware
+        // NOTE: Axum 0.6 has a default 2MB body limit which is reasonable for our API
         Router::new()
             .merge(public_routes)
             .merge(protected_routes)

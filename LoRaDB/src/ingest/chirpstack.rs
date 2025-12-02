@@ -4,7 +4,7 @@ use crate::model::decoded::DecodedPayload;
 use crate::model::frames::{Frame, UplinkFrame};
 use crate::model::gateway::{GatewayLocation, GatewayRxInfo};
 use crate::model::lorawan::*;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use chrono::Utc;
 use serde::Deserialize;
 
@@ -142,12 +142,22 @@ impl MessageParser for ChirpStackParser {
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(Utc::now);
 
+        // SECURITY: Validate f_port according to LoRaWAN spec (1-223 for application data)
+        let f_port = msg.f_port.unwrap_or(0);
+        if f_port == 0 || f_port > 223 {
+            tracing::warn!(
+                dev_eui = dev_eui.as_str(),
+                f_port = f_port,
+                "Invalid f_port value (must be 1-223 for application data)"
+            );
+        }
+
         let uplink = UplinkFrame {
             dev_eui,
             application_id: ApplicationId::new(application_id),
             device_name: msg.device_info.device_name,
             received_at,
-            f_port: msg.f_port.unwrap_or(0),
+            f_port,
             f_cnt: msg.f_cnt.unwrap_or(0),
             confirmed: msg.confirmed,
             adr: msg.adr,

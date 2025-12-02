@@ -134,9 +134,20 @@ impl MessageParser for TtnParser {
         let received_at = msg
             .uplink_message
             .received_at
-            .and_then(|s| chrono::DateTime::parse_from_rfc3339(&s).ok())
+            .as_deref()
+            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(Utc::now);
+
+        // SECURITY: Validate f_port according to LoRaWAN spec (1-223 for application data)
+        let f_port = msg.uplink_message.f_port;
+        if f_port == 0 || f_port > 223 {
+            tracing::warn!(
+                dev_eui = dev_eui.as_str(),
+                f_port = f_port,
+                "Invalid f_port value (must be 1-223 for application data)"
+            );
+        }
 
         let uplink = UplinkFrame {
             dev_eui,
@@ -145,7 +156,7 @@ impl MessageParser for TtnParser {
             ),
             device_name: Some(msg.end_device_ids.device_id),
             received_at,
-            f_port: msg.uplink_message.f_port,
+            f_port,
             f_cnt: msg.uplink_message.f_cnt,
             confirmed: msg.uplink_message.confirmed,
             adr: false, // TTN doesn't always expose ADR status

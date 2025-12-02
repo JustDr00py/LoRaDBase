@@ -2,7 +2,6 @@ use crate::error::LoraDbError;
 use crate::query::dsl::QueryResult;
 use crate::query::executor::QueryExecutor;
 use crate::query::parser::QueryParser;
-use crate::security::jwt::Claims;
 use crate::security::api_token::ApiTokenStore;
 use crate::storage::StorageEngine;
 use crate::api::middleware::AuthContext;
@@ -14,6 +13,26 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+
+// SECURITY: String length limits to prevent memory exhaustion attacks
+const MAX_QUERY_LENGTH: usize = 10_000;
+const MAX_TOKEN_NAME_LENGTH: usize = 100;
+const MAX_DEV_EUI_LENGTH: usize = 32;
+const MAX_TOKEN_ID_LENGTH: usize = 64;
+const MAX_APP_ID_LENGTH: usize = 256;
+
+/// Validate string length
+fn validate_string_length(s: &str, max_len: usize, field_name: &str) -> Result<(), LoraDbError> {
+    if s.len() > max_len {
+        return Err(LoraDbError::QueryParseError(format!(
+            "{} exceeds maximum length of {} characters (got {})",
+            field_name,
+            max_len,
+            s.len()
+        )));
+    }
+    Ok(())
+}
 
 /// Application state shared across handlers
 #[derive(Clone)]
@@ -98,19 +117,52 @@ pub struct ErrorResponse {
 
 impl IntoResponse for LoraDbError {
     fn into_response(self) -> Response {
-        let (status, error_type) = match self {
-            LoraDbError::QueryParseError(_) => (StatusCode::BAD_REQUEST, "QueryParseError"),
-            LoraDbError::QueryExecutionError(_) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "QueryExecutionError")
+        let (status, error_type, message) = match self {
+            LoraDbError::QueryParseError(msg) => {
+                // User input error - safe to expose details
+                (StatusCode::BAD_REQUEST, "QueryParseError", msg)
             }
-            LoraDbError::AuthError(_) => (StatusCode::UNAUTHORIZED, "AuthError"),
-            LoraDbError::InvalidDevEui(_) => (StatusCode::BAD_REQUEST, "InvalidDevEui"),
-            _ => (StatusCode::INTERNAL_SERVER_ERROR, "InternalError"),
+            LoraDbError::QueryExecutionError(msg) => {
+                // SECURITY: Log detailed error but return sanitized message to user
+                tracing::error!(error = %msg, "Query execution error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "QueryExecutionError",
+                    "Query execution failed. Please check your query syntax and try again.".to_string(),
+                )
+            }
+            LoraDbError::AuthError(_) => {
+                // Don't expose auth error details for security
+                (StatusCode::UNAUTHORIZED, "AuthError", "Authentication failed".to_string())
+            }
+            LoraDbError::InvalidDevEui(msg) => {
+                // User input error - safe to expose details
+                (StatusCode::BAD_REQUEST, "InvalidDevEui", msg)
+            }
+            LoraDbError::StorageError(msg) => {
+                // SECURITY: Log detailed error but return generic message
+                tracing::error!(error = %msg, "Storage error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "InternalError",
+                    "An internal error occurred. Please try again later.".to_string(),
+                )
+            }
+            _ => {
+                // SECURITY: Log detailed error but return generic message
+                let error_msg = self.to_string();
+                tracing::error!(error = %error_msg, "Internal error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "InternalError",
+                    "An internal error occurred. Please try again later.".to_string(),
+                )
+            }
         };
 
         let body = Json(ErrorResponse {
             error: error_type.to_string(),
-            message: self.to_string(),
+            message,
         });
 
         (status, body).into_response()
@@ -131,6 +183,9 @@ pub async fn execute_query(
     Extension(auth_context): Extension<AuthContext>,
     Json(request): Json<QueryRequest>,
 ) -> Result<Json<QueryResult>, LoraDbError> {
+    // SECURITY: Validate query string length
+    validate_string_length(&request.query, MAX_QUERY_LENGTH, "Query")?;
+
     tracing::info!(
         user = auth_context.user_id(),
         query = request.query,
@@ -182,6 +237,9 @@ pub async fn get_device(
     Extension(_auth_context): Extension<AuthContext>,
     Path(dev_eui): Path<String>,
 ) -> Result<Json<DeviceInfo>, LoraDbError> {
+    // SECURITY: Validate dev_eui string length
+    validate_string_length(&dev_eui, MAX_DEV_EUI_LENGTH, "DevEUI")?;
+
     let registry = state.storage.device_registry();
 
     if let Some(device) = registry.get_device(&dev_eui) {
@@ -205,6 +263,9 @@ pub async fn create_token(
     Extension(auth_context): Extension<AuthContext>,
     Json(request): Json<CreateTokenRequest>,
 ) -> Result<Json<TokenResponse>, LoraDbError> {
+    // SECURITY: Validate token name length
+    validate_string_length(&request.name, MAX_TOKEN_NAME_LENGTH, "Token name")?;
+
     let user_id = auth_context.user_id();
 
     tracing::info!(
@@ -271,6 +332,9 @@ pub async fn revoke_token(
     Extension(auth_context): Extension<AuthContext>,
     Path(token_id): Path<String>,
 ) -> Result<StatusCode, LoraDbError> {
+    // SECURITY: Validate token ID length
+    validate_string_length(&token_id, MAX_TOKEN_ID_LENGTH, "Token ID")?;
+
     let user_id = auth_context.user_id();
 
     tracing::info!(
@@ -394,6 +458,9 @@ pub async fn get_application_retention(
     Extension(_auth_context): Extension<AuthContext>,
     Path(app_id): Path<String>,
 ) -> Result<Json<ApplicationRetentionResponse>, LoraDbError> {
+    // SECURITY: Validate app_id string length
+    validate_string_length(&app_id, MAX_APP_ID_LENGTH, "Application ID")?;
+
     let retention_manager = state.storage.retention_manager();
 
     if let Some(policy) = retention_manager.get_application(&app_id).await {
@@ -418,6 +485,9 @@ pub async fn set_application_retention(
     Path(app_id): Path<String>,
     Json(request): Json<SetApplicationRetentionRequest>,
 ) -> Result<StatusCode, LoraDbError> {
+    // SECURITY: Validate app_id string length
+    validate_string_length(&app_id, MAX_APP_ID_LENGTH, "Application ID")?;
+
     let user_id = auth_context.user_id();
 
     tracing::info!(
@@ -442,6 +512,9 @@ pub async fn delete_application_retention(
     Extension(auth_context): Extension<AuthContext>,
     Path(app_id): Path<String>,
 ) -> Result<StatusCode, LoraDbError> {
+    // SECURITY: Validate app_id string length
+    validate_string_length(&app_id, MAX_APP_ID_LENGTH, "Application ID")?;
+
     let user_id = auth_context.user_id();
 
     tracing::info!(

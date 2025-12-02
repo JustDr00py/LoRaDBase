@@ -5,7 +5,7 @@ use crate::model::frames::Frame;
 use anyhow::Result;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use tracing::{info, warn};
 
 /// Compaction strategy: merge multiple SSTables when count exceeds threshold
@@ -70,7 +70,7 @@ impl CompactionManager {
         for reader in &sstables {
             // Get all entries by scanning the entire SSTable
             // We need to read each entry individually
-            for idx in 0..reader.metadata().num_entries {
+            for _idx in 0..reader.metadata().num_entries {
                 // We can't directly iterate, so we'll use the index
                 // For simplicity, we'll scan all devices (this is a limitation)
                 // In production, we'd want a more efficient iterator

@@ -3,6 +3,9 @@ use crate::query::dsl::{FilterClause, FromClause, Query, SelectClause};
 use anyhow::Result;
 use chrono::{DateTime, Duration, Utc};
 
+/// Maximum number of fields in a SELECT clause
+const MAX_SELECT_FIELDS: usize = 100;
+
 /// Parse a query string into a Query AST
 ///
 /// Grammar:
@@ -84,6 +87,14 @@ impl QueryParser {
                         .into());
                     }
                 }
+
+                // SECURITY: Enforce maximum field count to prevent memory exhaustion
+                if fields.len() > MAX_SELECT_FIELDS {
+                    return Err(LoraDbError::QueryParseError(
+                        format!("Too many fields in SELECT clause (max: {}, got: {})", MAX_SELECT_FIELDS, fields.len())
+                    ).into());
+                }
+
                 Ok(SelectClause::Fields(fields))
             }
             _ => Err(LoraDbError::QueryParseError(format!(

@@ -145,7 +145,9 @@ impl JwtService {
         Ok(token_data.claims)
     }
 
-    /// Extract claims from token without full validation (use with caution)
+    /// Extract claims from token without full validation (TESTING ONLY)
+    /// SECURITY: This method disables signature validation and should NEVER be used in production
+    #[cfg(test)]
     pub fn decode_token_unsafe(&self, token: &str) -> Result<Claims> {
         let mut validation = self.validation.clone();
         validation.insecure_disable_signature_validation();

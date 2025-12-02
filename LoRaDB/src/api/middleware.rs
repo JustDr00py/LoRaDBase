@@ -1,4 +1,3 @@
-use crate::error::LoraDbError;
 use crate::security::jwt::{Claims, JwtService};
 use crate::security::api_token::ApiTokenStore;
 use axum::{
@@ -6,7 +5,7 @@ use axum::{
     extract::State,
     http::{header, HeaderMap, HeaderValue, Request, StatusCode},
     middleware::Next,
-    response::{IntoResponse, Response},
+    response::Response,
 };
 use std::sync::Arc;
 use tracing::warn;

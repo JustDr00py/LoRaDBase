@@ -6,6 +6,9 @@ use crate::storage::StorageEngine;
 use anyhow::Result;
 use std::sync::Arc;
 
+/// Maximum number of results returned by a single query
+const MAX_QUERY_RESULTS: usize = 10_000;
+
 /// Query executor that runs queries against the storage engine
 pub struct QueryExecutor {
     storage: Arc<StorageEngine>,
@@ -18,6 +21,13 @@ impl QueryExecutor {
 
     /// Execute a query and return results
     pub async fn execute(&self, query: &Query) -> Result<QueryResult> {
+        // SECURITY: Enforce mandatory time filter to prevent unbounded queries
+        if query.filter.is_none() {
+            return Err(LoraDbError::QueryExecutionError(
+                "Time filter is required for security. Use WHERE LAST, SINCE, or BETWEEN clause.".to_string()
+            ).into());
+        }
+
         // Parse DevEUI
         let dev_eui = DevEui::new(query.from.dev_eui.clone())
             .map_err(|e| LoraDbError::QueryExecutionError(e.to_string()))?;
@@ -30,6 +40,16 @@ impl QueryExecutor {
             .storage
             .query(&dev_eui, start_time, end_time)
             .await?;
+
+        // SECURITY: Limit result set to prevent memory exhaustion
+        if frames.len() > MAX_QUERY_RESULTS {
+            tracing::warn!(
+                "Query returned {} frames, truncating to {}",
+                frames.len(),
+                MAX_QUERY_RESULTS
+            );
+            frames.truncate(MAX_QUERY_RESULTS);
+        }
 
         // Apply SELECT clause filtering
         frames = self.filter_frames(frames, &query.select);
@@ -218,13 +238,13 @@ mod tests {
             storage.write(frame).await.unwrap();
         }
 
-        // Execute query
+        // Execute query with time filter (now required)
         let query = Query::new(
             SelectClause::All,
             FromClause {
                 dev_eui: dev_eui_str.to_string(),
             },
-            None,
+            Some(FilterClause::Last(Duration::hours(1))),
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -276,13 +296,13 @@ mod tests {
             storage.write(frame).await.unwrap();
         }
 
-        // Execute query for uplink only
+        // Execute query for uplink only with time filter
         let query = Query::new(
             SelectClause::Uplink,
             FromClause {
                 dev_eui: dev_eui_str.to_string(),
             },
-            None,
+            Some(FilterClause::Last(Duration::hours(1))),
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -296,13 +316,13 @@ mod tests {
         let storage = Arc::new(StorageEngine::new(config).await.unwrap());
         let executor = QueryExecutor::new(storage);
 
-        // Query for device that doesn't exist
+        // Query for device that doesn't exist (with time filter)
         let query = Query::new(
             SelectClause::All,
             FromClause {
                 dev_eui: "FEDCBA9876543210".to_string(),
             },
-            None,
+            Some(FilterClause::Last(Duration::hours(1))),
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -359,7 +379,7 @@ mod tests {
             FromClause {
                 dev_eui: dev_eui_str.to_string(),
             },
-            None,
+            Some(FilterClause::Last(Duration::hours(1))),
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -419,7 +439,7 @@ mod tests {
             FromClause {
                 dev_eui: dev_eui_str.to_string(),
             },
-            None,
+            Some(FilterClause::Last(Duration::hours(1))),
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -527,7 +547,7 @@ mod tests {
             FromClause {
                 dev_eui: dev_eui_str.to_string(),
             },
-            None,
+            Some(FilterClause::Last(Duration::hours(1))),
         );
 
         let result = executor.execute(&query).await.unwrap();

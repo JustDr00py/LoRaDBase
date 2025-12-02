@@ -3,7 +3,7 @@ use crate::model::frames::Frame;
 use anyhow::{Context, Result};
 use crc32fast::Hasher;
 use std::fs::{create_dir_all, File, OpenOptions};
-use std::io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write};
+use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tracing::{error, info, warn};
