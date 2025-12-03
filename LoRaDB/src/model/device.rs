@@ -76,6 +76,11 @@ impl DeviceRegistry {
     pub fn device_count(&self) -> usize {
         self.devices.len()
     }
+
+    /// Remove a device from the registry
+    pub fn remove_device(&self, dev_eui_str: &str) -> bool {
+        self.devices.remove(dev_eui_str).is_some()
+    }
 }
 
 impl Default for DeviceRegistry {

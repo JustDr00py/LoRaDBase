@@ -1,5 +1,5 @@
 use crate::api::handlers::{
-    create_token, delete_application_retention, enforce_retention, execute_query,
+    create_token, delete_application_retention, delete_device, enforce_retention, execute_query,
     get_application_retention, get_device, get_global_retention, health_check, list_devices,
     list_retention_policies, list_tokens, revoke_token, set_application_retention,
     set_global_retention, AppState,
@@ -79,6 +79,7 @@ impl HttpServer {
             .route("/query", post(execute_query))
             .route("/devices", get(list_devices))
             .route("/devices/:dev_eui", get(get_device))
+            .route("/devices/:dev_eui", delete(delete_device))
             // API token management routes
             .route("/tokens", post(create_token))
             .route("/tokens", get(list_tokens))

@@ -543,6 +543,124 @@ impl StorageEngine {
         })
     }
 
+    /// Delete all data for a specific device
+    pub async fn delete_device(&self, dev_eui: &DevEui) -> Result<usize> {
+        info!("Deleting all data for device {}", dev_eui.as_str());
+
+        let mut total_deleted = 0;
+
+        // 1. Delete from memtable
+        {
+            let memtable = self.memtable.read().await;
+            let deleted = memtable.delete_device(dev_eui);
+            info!("Deleted {} frames from memtable", deleted);
+            total_deleted += deleted;
+        }
+
+        // 2. Rewrite SSTables without this device's data
+        let sstables_to_process = {
+            let sstables = self.sstables.read().await;
+            sstables.iter().map(|s| s.path().to_path_buf()).collect::<Vec<_>>()
+        };
+
+        if !sstables_to_process.is_empty() {
+            info!("Rewriting {} SSTables to remove device data", sstables_to_process.len());
+
+            // Reopen SSTables for reading
+            let old_sstables: Result<Vec<_>> = sstables_to_process
+                .iter()
+                .map(|path| SSTableReader::open(path.clone()))
+                .collect();
+            let old_sstables = old_sstables?;
+
+            // Create new SSTables without the deleted device
+            let mut new_sstables = Vec::new();
+            let mut old_paths = Vec::new();
+
+            for sstable in old_sstables {
+                let old_path = sstable.path().to_path_buf();
+                old_paths.push(old_path);
+
+                // Read all frames except those for the deleted device
+                let frames: Vec<_> = sstable
+                    .iter_all()?
+                    .into_iter()
+                    .filter(|frame| {
+                        let is_deleted_device = frame.dev_eui() == dev_eui;
+                        if is_deleted_device {
+                            total_deleted += 1;
+                        }
+                        !is_deleted_device
+                    })
+                    .collect();
+
+                // Only create new SSTable if there are remaining frames
+                if !frames.is_empty() {
+                    let new_id = {
+                        let mut compaction = self.compaction_manager.write().await;
+                        compaction.allocate_sstable_id()
+                    };
+
+                    let mut writer = SSTableWriter::new(new_id, &self.data_dir);
+
+                    // Sort frames by key and write to new SSTable
+                    let mut keyed_frames: Vec<_> = frames
+                        .into_iter()
+                        .enumerate()
+                        .map(|(seq, frame)| {
+                            let key = crate::engine::memtable::MemtableKey::new(
+                                frame.dev_eui(),
+                                frame.timestamp(),
+                                seq as u64,
+                            );
+                            (key, frame)
+                        })
+                        .collect();
+
+                    keyed_frames.sort_by(|a, b| a.0.cmp(&b.0));
+
+                    for (key, frame) in keyed_frames {
+                        writer.add(key, frame)?;
+                    }
+
+                    let metadata = writer.finish()?;
+                    info!("Created new SSTable {} with {} entries", metadata.id, metadata.num_entries);
+
+                    let new_path = self.data_dir.join(format!("sstable-{:08}.sst", metadata.id));
+                    new_sstables.push(SSTableReader::open(new_path)?);
+                } else {
+                    info!("SSTable had only deleted device's data, not creating new SSTable");
+                }
+            }
+
+            // Replace SSTables list with new ones
+            {
+                let mut sstables = self.sstables.write().await;
+                *sstables = new_sstables;
+            }
+
+            // Delete old SSTable files
+            for path in old_paths {
+                match tokio::fs::remove_file(&path).await {
+                    Ok(_) => debug!("Deleted old SSTable: {:?}", path),
+                    Err(e) => warn!("Failed to delete old SSTable {:?}: {}", path, e),
+                }
+            }
+        }
+
+        // 3. Remove device from registry
+        self.device_registry.remove_device(&dev_eui.as_str().to_string());
+        info!("Removed device from registry");
+
+        info!(
+            "Deleted total of {} frames for device {}",
+            total_deleted,
+            dev_eui.as_str()
+        );
+
+        Ok(total_deleted)
+    }
+
     /// Gracefully shut down storage engine by flushing memtable to SSTable
     pub async fn shutdown(&self) -> Result<()> {
         info!("Shutting down storage engine");
