@@ -257,6 +257,63 @@ pub async fn get_device(
     }
 }
 
+/// Delete device and all its data
+pub async fn delete_device(
+    State(state): State<AppState>,
+    Extension(auth_context): Extension<AuthContext>,
+    Path(dev_eui): Path<String>,
+) -> Result<Json<DeleteDeviceResponse>, LoraDbError> {
+    // SECURITY: Validate dev_eui string length
+    validate_string_length(&dev_eui, MAX_DEV_EUI_LENGTH, "DevEUI")?;
+
+    let user_id = auth_context.user_id();
+
+    tracing::info!(
+        user = user_id,
+        dev_eui = dev_eui,
+        "Deleting device and all its data"
+    );
+
+    // Check if device exists
+    let registry = state.storage.device_registry();
+    if registry.get_device(&dev_eui).is_none() {
+        return Err(LoraDbError::InvalidDevEui(format!(
+            "Device {} not found",
+            dev_eui
+        )));
+    }
+
+    // Parse DevEUI
+    let dev_eui_parsed = crate::model::lorawan::DevEui::new(dev_eui.clone())
+        .map_err(|e| LoraDbError::InvalidDevEui(e.to_string()))?;
+
+    // Delete all data for the device
+    let deleted_count = state
+        .storage
+        .delete_device(&dev_eui_parsed)
+        .await
+        .map_err(|e| LoraDbError::StorageError(format!("Failed to delete device: {}", e)))?;
+
+    tracing::info!(
+        user = user_id,
+        dev_eui = dev_eui,
+        deleted_frames = deleted_count,
+        "Device deleted successfully"
+    );
+
+    Ok(Json(DeleteDeviceResponse {
+        dev_eui,
+        deleted_frames: deleted_count,
+    }))
+}
+
+/// Delete device response
+#[derive(Debug, Serialize)]
+pub struct DeleteDeviceResponse {
+    pub dev_eui: String,
+    pub deleted_frames: usize,
+}
+
 /// Create a new API token
 pub async fn create_token(
     State(state): State<AppState>,
@@ -481,8 +538,8 @@ pub async fn get_application_retention(
 /// Set application-specific retention policy
 pub async fn set_application_retention(
     State(state): State<AppState>,
-    Extension(auth_context): Extension<AuthContext>,
     Path(app_id): Path<String>,
+    Extension(auth_context): Extension<AuthContext>,
     Json(request): Json<SetApplicationRetentionRequest>,
 ) -> Result<StatusCode, LoraDbError> {
     // SECURITY: Validate app_id string length
@@ -509,8 +566,8 @@ pub async fn set_application_retention(
 /// Delete application-specific retention policy
 pub async fn delete_application_retention(
     State(state): State<AppState>,
-    Extension(auth_context): Extension<AuthContext>,
     Path(app_id): Path<String>,
+    Extension(auth_context): Extension<AuthContext>,
 ) -> Result<StatusCode, LoraDbError> {
     // SECURITY: Validate app_id string length
     validate_string_length(&app_id, MAX_APP_ID_LENGTH, "Application ID")?;

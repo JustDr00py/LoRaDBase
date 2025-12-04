@@ -66,45 +66,19 @@ impl CompactionManager {
         // Later entries with same dev_eui/timestamp but higher sequence number override earlier ones
         let mut merged_data: BTreeMap<MemtableKey, Frame> = BTreeMap::new();
 
-        // Read all entries from all SSTables
-        for reader in &sstables {
-            // Get all entries by scanning the entire SSTable
-            // We need to read each entry individually
-            for _idx in 0..reader.metadata().num_entries {
-                // We can't directly iterate, so we'll use the index
-                // For simplicity, we'll scan all devices (this is a limitation)
-                // In production, we'd want a more efficient iterator
-            }
-        }
-
-        // Alternative approach: scan by reading data blocks directly
-        // For now, we'll use a simpler approach - merge based on scanning specific devices
-        // This is a simplified implementation
-
-        // Collect all unique device EUIs from metadata
+        // Collect all entries from all SSTables using iter_all()
         let mut all_entries: Vec<(MemtableKey, Frame)> = Vec::new();
 
         for reader in &sstables {
-            // For each SSTable, we need to extract all frames
-            // We'll do this by scanning with empty constraints
-            // This requires an iterator method, which we don't have yet
-
-            // Workaround: scan with the SSTable's min/max key range
-            let metadata = reader.metadata();
-
-            // Extract dev_eui from min_key
-            let dev_eui_str = &metadata.min_key.dev_eui;
-            let dev_eui = crate::model::lorawan::DevEui::new(dev_eui_str.clone())?;
-
-            // Scan this device
-            let frames = reader.scan(&dev_eui, None, None)?;
+            // Extract all frames from this SSTable
+            let frames = reader.iter_all()?;
 
             // Add frames with their keys
             for frame in frames {
                 let key = MemtableKey::new(
                     frame.dev_eui(),
                     frame.timestamp(),
-                    metadata.min_key.sequence, // This is approximate; real impl would track sequence
+                    0, // Sequence number not preserved during compaction (will be deduplicated by dev_eui+timestamp)
                 );
                 all_entries.push((key, frame));
             }

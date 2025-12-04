@@ -11,10 +11,10 @@ use std::collections::HashSet;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 const SSTABLE_MAGIC: u32 = 0x5353544C; // "SSTL"
-const SSTABLE_VERSION: u16 = 1;
+const SSTABLE_VERSION: u16 = 2; // v2: Fixed bincode compatibility for Frame
 
 /// SSTable metadata
 #[derive(Debug, Clone)]
@@ -265,11 +265,11 @@ impl SSTableReader {
         reader.read_exact(&mut version_buf)?;
         let version = u16::from_le_bytes(version_buf);
         if version != SSTABLE_VERSION {
-            return Err(LoraDbError::StorageError(format!(
-                "Unsupported SSTable version: {}",
-                version
-            ))
-            .into());
+            warn!(
+                "Skipping SSTable {:?} with incompatible version {} (current: {})",
+                path, version, SSTABLE_VERSION
+            );
+            return Err(LoraDbError::IncompatibleSStableVersion(version).into());
         }
 
         let mut id_buf = [0u8; 8];

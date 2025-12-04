@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use parking_lot::RwLock;
 use tracing::{info, warn};
 
 /// Manages retention policies with JSON persistence
@@ -138,18 +138,18 @@ impl RetentionPolicyManager {
 
     /// Get current policies (for internal use by storage engine)
     pub async fn get_policies(&self) -> RetentionPolicies {
-        self.policies.read().await.clone()
+        self.policies.read().clone()
     }
 
     /// Get global retention policy
     pub async fn get_global(&self) -> Option<u32> {
-        self.policies.read().await.global_days
+        self.policies.read().global_days
     }
 
     /// Set global retention policy
     pub async fn set_global(&self, days: Option<u32>) -> Result<()> {
         {
-            let mut policies = self.policies.write().await;
+            let mut policies = self.policies.write();
             policies.global_days = days;
         }
         self.save().await?;
@@ -164,7 +164,7 @@ impl RetentionPolicyManager {
 
     /// Get retention policy for a specific application
     pub async fn get_application(&self, app_id: &str) -> Option<RetentionPolicy> {
-        self.policies.read().await.applications.get(app_id).cloned()
+        self.policies.read().applications.get(app_id).cloned()
     }
 
     /// Set retention policy for a specific application
@@ -172,7 +172,7 @@ impl RetentionPolicyManager {
         let now = Utc::now();
 
         {
-            let mut policies = self.policies.write().await;
+            let mut policies = self.policies.write();
 
             if let Some(existing) = policies.applications.get_mut(&app_id) {
                 existing.days = days;
@@ -202,7 +202,7 @@ impl RetentionPolicyManager {
     /// Remove application-specific retention policy (will fall back to global)
     pub async fn remove_application(&self, app_id: &str) -> Result<bool> {
         let removed = {
-            let mut policies = self.policies.write().await;
+            let mut policies = self.policies.write();
             policies.applications.remove(app_id).is_some()
         };
 
@@ -216,18 +216,18 @@ impl RetentionPolicyManager {
 
     /// List all application-specific policies
     pub async fn list_applications(&self) -> HashMap<String, RetentionPolicy> {
-        self.policies.read().await.applications.clone()
+        self.policies.read().applications.clone()
     }
 
     /// Get check interval in hours
     pub async fn get_check_interval_hours(&self) -> u64 {
-        self.policies.read().await.check_interval_hours
+        self.policies.read().check_interval_hours
     }
 
     /// Set check interval in hours
     pub async fn set_check_interval_hours(&self, hours: u64) -> Result<()> {
         {
-            let mut policies = self.policies.write().await;
+            let mut policies = self.policies.write();
             policies.check_interval_hours = hours;
         }
         self.save().await?;
@@ -237,7 +237,7 @@ impl RetentionPolicyManager {
 
     /// Save policies to disk
     async fn save(&self) -> Result<()> {
-        let policies = self.policies.read().await;
+        let policies = self.policies.read();
         let json = serde_json::to_string_pretty(&*policies)?;
 
         tokio::fs::write(&self.file_path, json).await?;
@@ -255,7 +255,7 @@ impl RetentionPolicyManager {
 
     /// Convert to format expected by storage engine (for backward compatibility)
     pub async fn to_storage_config(&self) -> (Option<u32>, HashMap<String, Option<u32>>, u64) {
-        let policies = self.policies.read().await;
+        let policies = self.policies.read();
         let retention_apps = policies
             .applications
             .iter()

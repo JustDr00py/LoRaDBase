@@ -152,6 +152,48 @@ impl Memtable {
         self.size_bytes.store(0, Ordering::Relaxed);
         self.sequence.store(0, Ordering::Relaxed);
     }
+
+    /// Delete all entries for a specific device
+    pub fn delete_device(&self, dev_eui: &DevEui) -> usize {
+        let dev_eui_norm = dev_eui.normalized();
+        let mut deleted_count = 0;
+        let mut deleted_bytes = 0;
+
+        // Find and remove all entries for this device
+        let start_key = MemtableKey {
+            dev_eui: dev_eui_norm.clone(),
+            timestamp: i64::MIN,
+            sequence: 0,
+        };
+
+        let end_key = MemtableKey {
+            dev_eui: dev_eui_norm,
+            timestamp: i64::MAX,
+            sequence: u64::MAX,
+        };
+
+        // Collect keys to delete (can't delete while iterating)
+        let keys_to_delete: Vec<MemtableKey> = self
+            .data
+            .range(start_key..=end_key)
+            .map(|entry| entry.key().clone())
+            .collect();
+
+        // Delete the entries
+        for key in keys_to_delete {
+            if let Some(entry) = self.data.remove(&key) {
+                deleted_count += 1;
+                // Approximate size calculation
+                let frame_size = std::mem::size_of_val(&entry.value()) + std::mem::size_of_val(&key);
+                deleted_bytes += frame_size;
+            }
+        }
+
+        // Update size counter
+        self.size_bytes.fetch_sub(deleted_bytes, Ordering::Relaxed);
+
+        deleted_count
+    }
 }
 
 impl Clone for Memtable {

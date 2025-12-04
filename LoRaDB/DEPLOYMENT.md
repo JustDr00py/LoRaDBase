@@ -141,6 +141,36 @@ This will:
 
 **Note:** Data in SSTables (flushed data) is preserved. Only WAL data is lost.
 
+### SSTable Deserialization Errors
+
+If you see warnings like "Skipping SSTable with incompatible version 1" in logs:
+
+**Symptoms:**
+- Warnings in logs about incompatible SSTable versions
+- Queries may return incomplete data
+- Old historical data temporarily inaccessible
+
+**What's Happening:**
+- LoRaDB v2 introduced bincode compatibility fixes for the Frame serialization format
+- Old SSTable files (version 1) cannot be deserialized with the new format
+- The system automatically skips incompatible SSTables and continues operation
+
+**Solution: Wait for Natural Data Rotation** (Recommended)
+- New data is written in version 2 format and queries work normally
+- Old version 1 SSTables are preserved on disk but skipped during queries
+- As new data arrives, old SSTables naturally age out based on retention policies
+- No manual intervention required
+
+**Alternative: Manual Cleanup** (permanent data loss)
+If you want to immediately clear old incompatible SSTables:
+```bash
+# WARNING: This permanently deletes all historical SSTable data
+docker compose exec loradb sh -c "rm -f /app/data/*.sst"
+docker compose restart loradb
+```
+
+**Note:** WAL and memtable data is preserved. Only SSTable data is affected.
+
 ### Check Logs for Issues
 
 ```bash

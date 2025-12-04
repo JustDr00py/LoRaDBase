@@ -26,6 +26,9 @@ pub enum LoraDbError {
     #[error("Invalid DevEUI: {0}")]
     InvalidDevEui(String),
 
+    #[error("Incompatible SSTable version: {0}")]
+    IncompatibleSStableVersion(u16),
+
     #[error("Query parse error: {0}")]
     QueryParseError(String),
 

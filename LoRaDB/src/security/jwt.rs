@@ -106,7 +106,8 @@ impl JwtService {
 
     /// Create JWT service from base64-encoded secret
     pub fn from_base64_secret(encoded_secret: &str) -> Result<Self> {
-        let secret_bytes = base64::decode(encoded_secret)
+        use base64::Engine;
+        let secret_bytes = base64::engine::general_purpose::STANDARD.decode(encoded_secret)
             .map_err(|e| LoraDbError::AuthError(format!("Invalid base64 secret: {}", e)))?;
 
         if secret_bytes.len() < 32 {
@@ -274,9 +275,10 @@ mod tests {
 
     #[test]
     fn test_jwt_from_base64_secret() {
+        use base64::Engine;
         // Generate a 32-byte secret and encode it
         let secret_bytes = vec![0x42u8; 32]; // 32 bytes
-        let encoded = base64::encode(&secret_bytes);
+        let encoded = base64::engine::general_purpose::STANDARD.encode(&secret_bytes);
 
         let service = JwtService::from_base64_secret(&encoded).unwrap();
         let claims = Claims::new("user123".to_string());

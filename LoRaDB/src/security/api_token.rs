@@ -7,7 +7,8 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use parking_lot::RwLock;
 
 /// API token prefix for easy identification
 const TOKEN_PREFIX: &str = "ldb_";
@@ -142,9 +143,7 @@ impl ApiTokenStore {
         let data = fs::read_to_string(&self.storage_path)?;
         let tokens: HashMap<String, ApiToken> = serde_json::from_str(&data)?;
 
-        let mut token_map = self.tokens.write().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut token_map = self.tokens.write();
         *token_map = tokens;
 
         Ok(())
@@ -152,9 +151,7 @@ impl ApiTokenStore {
 
     /// Save tokens to disk
     fn save(&self) -> Result<()> {
-        let token_map = self.tokens.read().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let token_map = self.tokens.read();
 
         let data = serde_json::to_string_pretty(&*token_map)?;
         fs::write(&self.storage_path, data)?;
@@ -181,9 +178,7 @@ impl ApiTokenStore {
         };
 
         // Store token
-        let mut token_map = self.tokens.write().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut token_map = self.tokens.write();
 
         token_map.insert(api_token.token_hash.clone(), api_token.clone());
         drop(token_map);
@@ -198,9 +193,7 @@ impl ApiTokenStore {
     pub fn validate_token(&self, token: &str) -> Result<ApiToken> {
         let token_hash = hash_token(token);
 
-        let mut token_map = self.tokens.write().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut token_map = self.tokens.write();
 
         let api_token = token_map
             .get_mut(&token_hash)
@@ -229,9 +222,7 @@ impl ApiTokenStore {
 
     /// List all tokens for a user
     pub fn list_tokens(&self, user_id: &str) -> Result<Vec<ApiToken>> {
-        let token_map = self.tokens.read().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let token_map = self.tokens.read();
 
         let user_tokens: Vec<ApiToken> = token_map
             .values()
@@ -244,18 +235,14 @@ impl ApiTokenStore {
 
     /// List all tokens (admin only)
     pub fn list_all_tokens(&self) -> Result<Vec<ApiToken>> {
-        let token_map = self.tokens.read().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let token_map = self.tokens.read();
 
         Ok(token_map.values().cloned().collect())
     }
 
     /// Revoke a token by ID
     pub fn revoke_token(&self, token_id: &str, user_id: &str) -> Result<()> {
-        let mut token_map = self.tokens.write().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut token_map = self.tokens.write();
 
         let token = token_map
             .values_mut()
@@ -278,9 +265,7 @@ impl ApiTokenStore {
 
     /// Delete a token by ID (admin only)
     pub fn delete_token(&self, token_id: &str) -> Result<()> {
-        let mut token_map = self.tokens.write().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut token_map = self.tokens.write();
 
         // Find and remove the token
         token_map.retain(|_, t| t.id != token_id);
@@ -294,9 +279,7 @@ impl ApiTokenStore {
 
     /// Clean up expired tokens
     pub fn cleanup_expired(&self) -> Result<usize> {
-        let mut token_map = self.tokens.write().map_err(|e| {
-            LoraDbError::StorageError(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut token_map = self.tokens.write();
 
         let initial_count = token_map.len();
         token_map.retain(|_, t| !t.is_expired());

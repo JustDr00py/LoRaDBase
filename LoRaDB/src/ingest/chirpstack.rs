@@ -27,11 +27,13 @@ impl Default for ChirpStackParser {
 #[serde(rename_all = "camelCase")]
 struct ChirpStackUplink {
     #[serde(default)]
+    #[allow(dead_code)]
     deduplication_id: Option<String>,
     #[serde(default)]
     time: Option<String>,
     device_info: ChirpStackDeviceInfo,
     #[serde(default)]
+    #[allow(dead_code)]
     dev_addr: Option<String>,
     #[serde(default)]
     f_port: Option<u8>,
@@ -57,8 +59,10 @@ struct ChirpStackUplink {
 #[serde(rename_all = "camelCase")]
 struct ChirpStackDeviceInfo {
     #[serde(default)]
+    #[allow(dead_code)]
     tenant_id: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     tenant_name: Option<String>,
     dev_eui: String,
     #[serde(default)]
@@ -67,12 +71,16 @@ struct ChirpStackDeviceInfo {
     #[serde(default)]
     application_name: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     device_profile_id: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     device_profile_name: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     device_class_enabled: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     tags: Option<serde_json::Value>,
 }
 
@@ -108,6 +116,7 @@ struct ChirpStackTxInfo {
     #[serde(default)]
     frequency: Option<u64>,
     #[serde(default)]
+    #[allow(dead_code)]
     modulation: Option<serde_json::Value>, // Can be string or object
 }
 

@@ -5,9 +5,11 @@ use crc32fast::Hasher;
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use parking_lot::Mutex;
 use tracing::{error, info, warn};
 
+#[allow(dead_code)]
 const WAL_SEGMENT_SIZE: u64 = 64 * 1024 * 1024; // 64MB per segment
 const WAL_MAGIC: u32 = 0x4C4F5241; // "LORA"
 const WAL_VERSION: u16 = 2; // v2: Fixed bincode compatibility for serde_json::Value
@@ -17,12 +19,14 @@ pub struct WriteAheadLog {
     data_dir: PathBuf,
     current_segment: Arc<Mutex<WalSegment>>,
     segment_number: u64,
+    #[allow(dead_code)]
     sync_interval_ms: u64,
 }
 
 struct WalSegment {
     file: BufWriter<File>,
     size: u64,
+    #[allow(dead_code)]
     path: PathBuf,
 }
 
@@ -32,6 +36,7 @@ struct WalSegment {
 /// - Payload (N bytes): bincode-serialized Frame
 /// - CRC32 (4 bytes): checksum of length + payload
 #[derive(Debug)]
+#[allow(dead_code)]
 struct WalEntry {
     _frame: Frame,
 }
@@ -69,10 +74,7 @@ impl WriteAheadLog {
 
     /// Append a frame to the WAL
     pub fn append(&self, frame: &Frame) -> Result<()> {
-        let mut segment = self
-            .current_segment
-            .lock()
-            .map_err(|e| LoraDbError::WalError(format!("Lock poisoned: {}", e)))?;
+        let mut segment = self.current_segment.lock();
 
         // Serialize frame
         let payload =
@@ -109,10 +111,7 @@ impl WriteAheadLog {
 
     /// Sync the current segment to disk (fsync)
     pub fn sync(&self) -> Result<()> {
-        let mut segment = self
-            .current_segment
-            .lock()
-            .map_err(|e| LoraDbError::WalError(format!("Lock poisoned: {}", e)))?;
+        let mut segment = self.current_segment.lock();
 
         segment.file.flush()?;
         segment.file.get_mut().sync_all()?;
@@ -249,10 +248,7 @@ impl WriteAheadLog {
         let new_segment_path = Self::segment_path(&self.data_dir, 0);
         let new_segment = WalSegment::open(&new_segment_path)?;
 
-        let mut current = self
-            .current_segment
-            .lock()
-            .map_err(|e| LoraDbError::WalError(format!("Lock poisoned: {}", e)))?;
+        let mut current = self.current_segment.lock();
         *current = new_segment;
 
         Ok(())

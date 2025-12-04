@@ -265,7 +265,8 @@ impl Config {
         if self.storage.enable_encryption {
             if let Some(ref key) = self.storage.encryption_key {
                 // Try to decode base64 key
-                base64::decode(key).map_err(|e| {
+                use base64::Engine;
+                base64::engine::general_purpose::STANDARD.decode(key).map_err(|e| {
                     LoraDbError::ConfigError(format!(
                         "Invalid base64 encryption key: {}",
                         e

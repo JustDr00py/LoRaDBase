@@ -19,7 +19,8 @@ pub struct EncryptionKey {
 impl EncryptionKey {
     /// Create encryption key from base64-encoded string
     pub fn from_base64(encoded: &str) -> Result<Self> {
-        let key = base64::decode(encoded)
+        use base64::Engine;
+        let key = base64::engine::general_purpose::STANDARD.decode(encoded)
             .map_err(|e| LoraDbError::EncryptionError(format!("Invalid base64 key: {}", e)))?;
 
         if key.len() != 32 {
@@ -41,7 +42,8 @@ impl EncryptionKey {
 
     /// Export key as base64 string
     pub fn to_base64(&self) -> String {
-        base64::encode(&self.key)
+        use base64::Engine;
+        base64::engine::general_purpose::STANDARD.encode(&self.key)
     }
 
     /// Get key bytes
