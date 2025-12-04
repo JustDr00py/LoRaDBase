@@ -1,5 +1,5 @@
 use crate::api::handlers::{
-    create_token, delete_device, enforce_retention, execute_query,
+    create_token, delete_application_retention, delete_device, enforce_retention, execute_query,
     get_application_retention, get_device, get_global_retention, health_check, list_devices,
     list_retention_policies, list_tokens, revoke_token, AppState,
 };
