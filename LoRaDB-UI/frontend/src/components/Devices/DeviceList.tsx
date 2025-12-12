@@ -204,12 +204,20 @@ export const DeviceList: React.FC = () => {
                   <td>{device.application_id}</td>
                   <td>{formatRelativeTime(device.last_seen)}</td>
                   <td>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => navigate(`/query?devEui=${device.dev_eui}`)}
-                    >
-                      Query
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => navigate(`/query?devEui=${device.dev_eui}`)}
+                      >
+                        Query
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => navigate(`/analytics?devEui=${device.dev_eui}`)}
+                      >
+                        KPI
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

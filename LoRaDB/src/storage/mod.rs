@@ -552,7 +552,7 @@ impl StorageEngine {
 
         // 1. Delete from memtable
         {
-            let memtable = self.memtable.read().await;
+            let memtable = self.memtable.read();
             let deleted = memtable.delete_device(dev_eui);
             info!("Deleted {} frames from memtable", deleted);
             total_deleted += deleted;
@@ -560,7 +560,7 @@ impl StorageEngine {
 
         // 2. Rewrite SSTables without this device's data
         let sstables_to_process = {
-            let sstables = self.sstables.read().await;
+            let sstables = self.sstables.read();
             sstables.iter().map(|s| s.path().to_path_buf()).collect::<Vec<_>>()
         };
 
@@ -598,7 +598,7 @@ impl StorageEngine {
                 // Only create new SSTable if there are remaining frames
                 if !frames.is_empty() {
                     let new_id = {
-                        let mut compaction = self.compaction_manager.write().await;
+                        let mut compaction = self.compaction_manager.write();
                         compaction.allocate_sstable_id()
                     };
 
@@ -636,7 +636,7 @@ impl StorageEngine {
 
             // Replace SSTables list with new ones
             {
-                let mut sstables = self.sstables.write().await;
+                let mut sstables = self.sstables.write();
                 *sstables = new_sstables;
             }
 

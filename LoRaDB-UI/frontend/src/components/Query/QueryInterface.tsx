@@ -114,7 +114,6 @@ export const QueryInterface: React.FC = () => {
             <select className="form-control" value={config.frameType} onChange={(e) => updateConfig({ frameType: e.target.value as FrameType })}>
               <option value="all">All frames (*)</option>
               <option value="uplink">Uplink only</option>
-              <option value="downlink">Downlink only</option>
               <option value="join">Join frames only</option>
               <option value="decoded_payload">Decoded payload only</option>
               <option value="custom">Custom fields...</option>

@@ -372,3 +372,111 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+/* KPI Analytics Styles */
+.kpi-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.kpi-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.kpi-card {
+  background: var(--surface-color);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--primary-color);
+}
+
+.kpi-card.success {
+  border-left-color: var(--success-color);
+}
+
+.kpi-card.warning {
+  border-left-color: var(--warning-color);
+}
+
+.kpi-card.danger {
+  border-left-color: var(--danger-color);
+}
+
+.kpi-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.kpi-unit {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.kpi-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 5px;
+}
+
+.chart-container {
+  background: var(--surface-color);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.chart-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: var(--text-primary);
+}
+
+.time-range-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.time-range-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.time-range-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.time-range-btn:hover:not(.active) {
+  background: var(--bg-color);
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+}

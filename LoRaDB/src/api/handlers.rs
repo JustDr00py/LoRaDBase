@@ -624,6 +624,7 @@ mod tests {
     use crate::config::StorageConfig;
     use crate::model::frames::UplinkFrame;
     use crate::model::lorawan::*;
+    use crate::security::jwt::Claims;
     use chrono::Utc;
     use tempfile::TempDir;
 
@@ -694,7 +695,7 @@ mod tests {
 
         // Execute query
         let request = QueryRequest {
-            query: format!("SELECT * FROM device '{}'", dev_eui),
+            query: format!("SELECT * FROM device '{}' WHERE LAST '1h'", dev_eui),
         };
 
         let result = execute_query(

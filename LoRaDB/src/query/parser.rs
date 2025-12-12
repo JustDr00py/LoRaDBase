@@ -10,7 +10,7 @@ const MAX_SELECT_FIELDS: usize = 100;
 ///
 /// Grammar:
 /// ```text
-/// Query     := SELECT SelectClause FROM FromClause [ WHERE FilterClause ]
+/// Query     := SELECT SelectClause FROM FromClause [ WHERE FilterClause ] [ LIMIT integer ]
 /// SelectClause := * | uplink | downlink | join | Fields
 /// FromClause := device 'DevEUI'
 /// FilterClause := BETWEEN 'timestamp' AND 'timestamp'
@@ -43,6 +43,14 @@ impl QueryParser {
             None
         };
 
+        // Parse optional LIMIT clause
+        let limit = if self.peek_keyword(&tokens, "LIMIT") {
+            self.expect_keyword(&mut tokens, "LIMIT")?;
+            Some(self.parse_limit(&mut tokens)?)
+        } else {
+            None
+        };
+
         // Ensure we consumed all tokens
         if !tokens.is_empty() {
             return Err(LoraDbError::QueryParseError(format!(
@@ -52,7 +60,7 @@ impl QueryParser {
             .into());
         }
 
-        Ok(Query::new(select, from, filter))
+        Ok(Query::new(select, from, filter, limit))
     }
 
     fn parse_select(&self, tokens: &mut Vec<Token>) -> Result<SelectClause> {
@@ -160,6 +168,38 @@ impl QueryParser {
         Ok(FilterClause::Last(duration))
     }
 
+    fn parse_limit(&self, tokens: &mut Vec<Token>) -> Result<usize> {
+        if let Some(Token::Integer(limit)) = tokens.first() {
+            let limit = *limit;
+            tokens.remove(0);
+
+            // Validation: LIMIT must be > 0
+            if limit == 0 {
+                return Err(LoraDbError::QueryParseError(
+                    "LIMIT must be greater than 0".to_string()
+                )
+                .into());
+            }
+
+            // Warning: LIMIT > MAX_QUERY_RESULTS will be capped
+            const MAX_QUERY_RESULTS: usize = 10_000;
+            if limit > MAX_QUERY_RESULTS {
+                tracing::warn!(
+                    "LIMIT {} exceeds maximum {}; will be capped at maximum",
+                    limit,
+                    MAX_QUERY_RESULTS
+                );
+            }
+
+            Ok(limit)
+        } else {
+            Err(LoraDbError::QueryParseError(
+                "Expected integer after LIMIT keyword".to_string()
+            )
+            .into())
+        }
+    }
+
     fn expect_timestamp(&self, tokens: &mut Vec<Token>) -> Result<DateTime<Utc>> {
         if let Some(Token::String(ts_str)) = tokens.first() {
             let ts_str = ts_str.clone();
@@ -246,6 +286,7 @@ fn parse_duration(s: &str) -> Result<Duration> {
 enum Token {
     Identifier(String),
     String(String),
+    Integer(usize),
     Asterisk,
     Comma,
 }
@@ -290,7 +331,24 @@ impl Tokenizer {
                     }
                     tokens.push(Token::String(string));
                 }
+                _ if ch.is_numeric() => {
+                    // Parse pure numeric sequence as integer
+                    let mut number = String::new();
+                    while let Some(&ch) = chars.peek() {
+                        if ch.is_numeric() {
+                            number.push(chars.next().unwrap());
+                        } else {
+                            break;
+                        }
+                    }
+                    let value = number.parse::<usize>()
+                        .map_err(|_| LoraDbError::QueryParseError(
+                            format!("Invalid integer: {}", number)
+                        ))?;
+                    tokens.push(Token::Integer(value));
+                }
                 _ if ch.is_alphanumeric() || ch == '_' => {
+                    // Alphanumeric identifiers (preserves "1h", "field1", etc.)
                     let mut identifier = String::new();
                     while let Some(&ch) = chars.peek() {
                         if ch.is_alphanumeric() || ch == '_' || ch == '.' {
@@ -454,5 +512,63 @@ mod tests {
             }
             _ => panic!("Expected Fields select clause"),
         }
+    }
+
+    #[test]
+    fn test_tokenize_integer() {
+        let mut tokenizer = Tokenizer::new("LIMIT 100");
+        let tokens = tokenizer.tokenize().unwrap();
+
+        assert_eq!(tokens.len(), 2);
+        assert_eq!(tokens[0], Token::Identifier("LIMIT".to_string()));
+        assert_eq!(tokens[1], Token::Integer(100));
+    }
+
+    #[test]
+    fn test_tokenize_duration_vs_integer() {
+        // "1h" should be Identifier (duration, starts with digit but has alpha)
+        let mut tokenizer = Tokenizer::new("'1h'");
+        let tokens = tokenizer.tokenize().unwrap();
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0], Token::String("1h".to_string()));
+
+        // "100" should be Integer
+        let mut tokenizer = Tokenizer::new("100");
+        let tokens = tokenizer.tokenize().unwrap();
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0], Token::Integer(100));
+    }
+
+    #[test]
+    fn test_parse_limit() {
+        let parser = QueryParser::new();
+        let query = parser
+            .parse("SELECT * FROM device '0123456789ABCDEF' WHERE LAST '1h' LIMIT 100")
+            .unwrap();
+
+        assert_eq!(query.limit, Some(100));
+    }
+
+    #[test]
+    fn test_parse_limit_zero_error() {
+        let parser = QueryParser::new();
+        let result = parser
+            .parse("SELECT * FROM device '0123456789ABCDEF' WHERE LAST '1h' LIMIT 0");
+
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("greater than 0"));
+    }
+
+    #[test]
+    fn test_parse_limit_no_where() {
+        // LIMIT without WHERE should parse successfully
+        let parser = QueryParser::new();
+        let query = parser
+            .parse("SELECT * FROM device '0123456789ABCDEF' LIMIT 10")
+            .unwrap();
+
+        assert_eq!(query.limit, Some(10));
+        assert!(query.filter.is_none());
     }
 }

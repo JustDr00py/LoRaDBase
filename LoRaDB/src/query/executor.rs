@@ -41,14 +41,28 @@ impl QueryExecutor {
             .query(&dev_eui, start_time, end_time)
             .await?;
 
-        // SECURITY: Limit result set to prevent memory exhaustion
-        if frames.len() > MAX_QUERY_RESULTS {
-            tracing::warn!(
-                "Query returned {} frames, truncating to {}",
-                frames.len(),
-                MAX_QUERY_RESULTS
-            );
-            frames.truncate(MAX_QUERY_RESULTS);
+        // SECURITY: Apply user limit or MAX_QUERY_RESULTS, whichever is smaller
+        let effective_limit = query
+            .limit
+            .unwrap_or(MAX_QUERY_RESULTS)
+            .min(MAX_QUERY_RESULTS);
+
+        if frames.len() > effective_limit {
+            if let Some(user_limit) = query.limit {
+                tracing::debug!(
+                    "Applying user LIMIT {}: {} frames → {} frames",
+                    user_limit,
+                    frames.len(),
+                    effective_limit
+                );
+            } else {
+                tracing::warn!(
+                    "Query returned {} frames, truncating to MAX_QUERY_RESULTS ({})",
+                    frames.len(),
+                    MAX_QUERY_RESULTS
+                );
+            }
+            frames.truncate(effective_limit);
         }
 
         // Apply SELECT clause filtering
@@ -245,6 +259,7 @@ mod tests {
                 dev_eui: dev_eui_str.to_string(),
             },
             Some(FilterClause::Last(Duration::hours(1))),
+            None,
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -275,6 +290,7 @@ mod tests {
                 dev_eui: dev_eui_str.to_string(),
             },
             Some(FilterClause::Last(Duration::hours(1))),
+            None,
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -303,6 +319,7 @@ mod tests {
                 dev_eui: dev_eui_str.to_string(),
             },
             Some(FilterClause::Last(Duration::hours(1))),
+            None,
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -323,6 +340,7 @@ mod tests {
                 dev_eui: "FEDCBA9876543210".to_string(),
             },
             Some(FilterClause::Last(Duration::hours(1))),
+            None,
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -380,6 +398,7 @@ mod tests {
                 dev_eui: dev_eui_str.to_string(),
             },
             Some(FilterClause::Last(Duration::hours(1))),
+            None,
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -440,6 +459,7 @@ mod tests {
                 dev_eui: dev_eui_str.to_string(),
             },
             Some(FilterClause::Last(Duration::hours(1))),
+            None,
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -548,6 +568,7 @@ mod tests {
                 dev_eui: dev_eui_str.to_string(),
             },
             Some(FilterClause::Last(Duration::hours(1))),
+            None,
         );
 
         let result = executor.execute(&query).await.unwrap();
@@ -558,5 +579,63 @@ mod tests {
         assert_eq!(frame_json["decoded_payload.object.BatV"], json!(3.071));
         assert_eq!(frame_json["decoded_payload.object.Bat_status"], json!(3.0));
         assert_eq!(frame_json["decoded_payload.object.TempC_SHT"], json!(14.96));
+    }
+
+    #[tokio::test]
+    async fn test_execute_query_with_limit() {
+        let temp_dir = TempDir::new().unwrap();
+        let config = create_test_config(temp_dir.path());
+        let storage = Arc::new(StorageEngine::new(config).await.unwrap());
+        let executor = QueryExecutor::new(storage.clone());
+
+        // Write 50 test frames
+        let dev_eui_str = "0123456789ABCDEF";
+        let now = Utc::now();
+        for i in 0..50 {
+            let frame = create_test_uplink(dev_eui_str, now + Duration::seconds(i));
+            storage.write(frame).await.unwrap();
+        }
+
+        // Query with LIMIT 10
+        let query = Query::new(
+            SelectClause::All,
+            FromClause {
+                dev_eui: dev_eui_str.to_string(),
+            },
+            Some(FilterClause::Last(Duration::hours(1))),
+            Some(10),
+        );
+
+        let result = executor.execute(&query).await.unwrap();
+        assert_eq!(result.total_frames, 10);
+    }
+
+    #[tokio::test]
+    async fn test_execute_query_limit_larger_than_results() {
+        let temp_dir = TempDir::new().unwrap();
+        let config = create_test_config(temp_dir.path());
+        let storage = Arc::new(StorageEngine::new(config).await.unwrap());
+        let executor = QueryExecutor::new(storage.clone());
+
+        // Write 5 frames
+        let dev_eui_str = "0123456789ABCDEF";
+        let now = Utc::now();
+        for i in 0..5 {
+            let frame = create_test_uplink(dev_eui_str, now + Duration::seconds(i));
+            storage.write(frame).await.unwrap();
+        }
+
+        // Query with LIMIT 100 (larger than available frames)
+        let query = Query::new(
+            SelectClause::All,
+            FromClause {
+                dev_eui: dev_eui_str.to_string(),
+            },
+            Some(FilterClause::Last(Duration::hours(1))),
+            Some(100),
+        );
+
+        let result = executor.execute(&query).await.unwrap();
+        assert_eq!(result.total_frames, 5);
     }
 }

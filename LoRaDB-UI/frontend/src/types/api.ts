@@ -127,7 +127,7 @@ export interface ErrorResponse {
 }
 
 // Query DSL Types
-export type FrameType = 'all' | 'uplink' | 'downlink' | 'join' | 'decoded_payload' | 'custom';
+export type FrameType = 'all' | 'uplink' | 'join' | 'decoded_payload' | 'custom';
 export type TimeRangeType = 'last' | 'since' | 'between' | 'none';
 
 export interface QueryConfig {
@@ -171,4 +171,61 @@ export interface SetRetentionPolicyRequest {
 export interface RetentionEnforceResponse {
   message: string;
   deleted_sstables?: number;
+}
+
+// KPI Analytics Types
+export interface KPISummary {
+  totalTransmissions: number;
+  averageRSSI: number;
+  averageSNR: number;
+  averageAirtime: number;
+  totalEnergyMah: number;
+  dominantSpreadingFactor: string;
+  uniqueGateways: number;
+}
+
+export interface SignalQualityMetrics {
+  averageRSSI: number;
+  minRSSI: number;
+  maxRSSI: number;
+  averageSNR: number;
+  minSNR: number;
+  maxSNR: number;
+  gatewayCount: number;
+  gateways: Map<string, { rssi: number; snr: number; count: number }>;
+}
+
+export interface SpreadingFactorDistribution {
+  SF7: number;
+  SF8: number;
+  SF9: number;
+  SF10: number;
+  SF11: number;
+  SF12: number;
+  total: number;
+  percentages: Record<string, number>;
+}
+
+export interface EnergyMetrics {
+  totalEnergyMah: number;
+  averageEnergyPerTx: number;
+  energyBySpreadingFactor: Record<string, number>;
+}
+
+export interface FrequencyDistribution {
+  [key: string]: number | string[];  // frequency string -> count, plus metadata arrays
+  total: number;
+  frequencies: string[];  // Sorted unique frequencies
+}
+
+export interface TimeSeriesDataPoint {
+  timestamp: string;
+  timestampMs: number;
+  rssi?: number;
+  snr?: number;
+  spreadingFactor?: number;
+  airtime?: number;
+  energy?: number;
+  gatewayCount?: number;
+  frequency?: number;  // Frequency in MHz
 }

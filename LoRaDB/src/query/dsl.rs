@@ -7,6 +7,7 @@ pub struct Query {
     pub select: SelectClause,
     pub from: FromClause,
     pub filter: Option<FilterClause>,
+    pub limit: Option<usize>,
 }
 
 /// SELECT clause - what data to retrieve
@@ -45,11 +46,12 @@ pub enum FilterClause {
 }
 
 impl Query {
-    pub fn new(select: SelectClause, from: FromClause, filter: Option<FilterClause>) -> Self {
+    pub fn new(select: SelectClause, from: FromClause, filter: Option<FilterClause>, limit: Option<usize>) -> Self {
         Self {
             select,
             from,
             filter,
+            limit,
         }
     }
 
@@ -87,11 +89,13 @@ mod tests {
                 dev_eui: "0123456789ABCDEF".to_string(),
             },
             None,
+            None,
         );
 
         assert_eq!(query.select, SelectClause::All);
         assert_eq!(query.from.dev_eui, "0123456789ABCDEF");
         assert!(query.filter.is_none());
+        assert!(query.limit.is_none());
     }
 
     #[test]
@@ -105,6 +109,7 @@ mod tests {
                 dev_eui: "0123456789ABCDEF".to_string(),
             },
             Some(FilterClause::Between { start, end }),
+            None,
         );
 
         let (range_start, range_end) = query.time_range();
@@ -122,6 +127,7 @@ mod tests {
                 dev_eui: "0123456789ABCDEF".to_string(),
             },
             Some(FilterClause::Since(start)),
+            None,
         );
 
         let (range_start, range_end) = query.time_range();
@@ -137,6 +143,7 @@ mod tests {
                 dev_eui: "0123456789ABCDEF".to_string(),
             },
             Some(FilterClause::Last(Duration::hours(1))),
+            None,
         );
 
         let (range_start, range_end) = query.time_range();
