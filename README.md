@@ -51,6 +51,14 @@ LoRaDB is a specialized database built from scratch in Rust for storing and quer
 - **Automatic Reconnection**: Resilient connection handling
 - **Message Parsing**: JSON deserialization with validation
 
+#### HTTP Ingestion
+- **ChirpStack Webhook Support**: Ingest data via HTTP webhooks when MQTT access is unavailable
+- **Supported Events**: Uplink, Join, and Status events
+- **Authenticated**: JWT or API token required for all requests
+- **Same Data Model**: HTTP-ingested data is queryable using the same DSL as MQTT data
+- **Use Cases**: Helium networks, managed ChirpStack instances, webhook-based integrations
+- **See**: [HTTP Ingestion Guide](LoRaDB/docs/HTTP_INGESTION.md) for detailed setup instructions
+
 #### Query DSL
 Simple SQL-like query language with nested field projection:
 ```sql
@@ -74,12 +82,15 @@ SELECT received_at, f_port, decoded_payload.object.temperature FROM device '0123
 - **TLS Support**: Optional built-in TLS (use reverse proxy recommended for production)
 - **RESTful Endpoints**:
   - `GET /health` - Health check (no auth)
+  - `POST /ingest?event={type}` - ChirpStack webhook ingestion (auth required)
   - `POST /query` - Execute queries (auth required)
   - `GET /devices` - List devices (auth required)
   - `GET /devices/:dev_eui` - Device info (auth required)
   - `POST /tokens` - Create API token (auth required)
   - `GET /tokens` - List API tokens (auth required)
   - `DELETE /tokens/:token_id` - Revoke API token (auth required)
+  - `GET /retention/policies` - List retention policies (auth required)
+  - `POST /retention/enforce` - Trigger retention enforcement (auth required)
 
 ---
 
@@ -151,7 +162,34 @@ VITE_API_URL=http://YOUR_SERVER_IP:3001
 CORS_ORIGIN=http://YOUR_SERVER_IP:3000
 ```
 
-### 3. Access the UI
+### 3. Configure Data Ingestion
+
+**Option A: MQTT (Recommended for self-hosted ChirpStack)**
+
+MQTT is already configured in step 1 via `LoRaDB/.env`:
+```bash
+LORADB_MQTT_CHIRPSTACK_BROKER=mqtts://chirpstack.example.com:8883
+LORADB_MQTT_USERNAME=loradb
+LORADB_MQTT_PASSWORD=your-password
+```
+
+**Option B: HTTP Webhooks (For Helium, managed instances, or when MQTT unavailable)**
+
+1. Generate an API token:
+```bash
+cd LoRaDB
+docker compose exec loradb generate-token admin
+```
+
+2. Configure ChirpStack HTTP integration with these endpoints:
+   - **Uplink URL**: `http://your-loradb-server:8080/ingest?event=up`
+   - **Join URL**: `http://your-loradb-server:8080/ingest?event=join`
+   - **Status URL**: `http://your-loradb-server:8080/ingest?event=status`
+   - **Authorization Header**: `Authorization: Bearer <your_api_token>`
+
+**See [LoRaDB/docs/HTTP_INGESTION.md](LoRaDB/docs/HTTP_INGESTION.md) for detailed webhook configuration.**
+
+### 4. Access the UI
 
 Open your browser and navigate to:
 - **Local**: `http://localhost:3000`
@@ -685,9 +723,12 @@ Additional documentation is available in each component directory:
 
 ### LoRaDB Documentation
 - [LoRaDB/README.md](LoRaDB/README.md) - Complete database documentation
-- [LoRaDB/DEPLOYMENT.md](LoRaDB/DEPLOYMENT.md) - Deployment guide
-- [LoRaDB/API_TOKEN_GUIDE.md](LoRaDB/API_TOKEN_GUIDE.md) - API token management
-- [LoRaDB/QUERY_API_GUIDE.md](LoRaDB/QUERY_API_GUIDE.md) - Query API reference
+- [LoRaDB/DEPLOYMENT.md](LoRaDB/DEPLOYMENT.md) - Deployment guide with automated scripts
+- [LoRaDB/docs/HTTP_INGESTION.md](LoRaDB/docs/HTTP_INGESTION.md) - HTTP webhook ingestion guide
+- [LoRaDB/API_TOKEN_GUIDE.md](LoRaDB/API_TOKEN_GUIDE.md) - API token management and usage
+- [LoRaDB/QUERY_API_GUIDE.md](LoRaDB/QUERY_API_GUIDE.md) - Query API reference and examples
+- [LoRaDB/DELETE_DEVICE_API.md](LoRaDB/DELETE_DEVICE_API.md) - Device deletion API guide
+- [LoRaDB/PITCH.md](LoRaDB/PITCH.md) - Why use LoRaDB instead of generic TSDB
 
 ### LoRaDB-UI Documentation
 - [LoRaDB-UI/README.md](LoRaDB-UI/README.md) - Complete UI documentation

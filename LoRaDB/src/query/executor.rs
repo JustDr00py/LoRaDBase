@@ -109,6 +109,10 @@ impl QueryExecutor {
                 .into_iter()
                 .filter(|f| matches!(f, Frame::JoinRequest(_) | Frame::JoinAccept(_)))
                 .collect(),
+            SelectClause::Status => frames
+                .into_iter()
+                .filter(|f| matches!(f, Frame::Status(_)))
+                .collect(),
             SelectClause::Fields(_) => frames, // Field projection happens later
         }
     }

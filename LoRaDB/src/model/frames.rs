@@ -63,6 +63,17 @@ pub struct JoinAccept {
     pub dev_addr: String,
 }
 
+/// Status event (device battery and link margin)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatusFrame {
+    pub dev_eui: DevEui,
+    pub application_id: ApplicationId,
+    pub device_name: Option<String>,
+    pub received_at: DateTime<Utc>,
+    pub margin: i16,           // Link margin in dB
+    pub battery_level: u8,     // Battery percentage (0-100, 255=unavailable)
+}
+
 /// Frame type enum for storage
 /// Note: Uses default (externally tagged) serde representation for bincode compatibility
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -71,6 +82,7 @@ pub enum Frame {
     Downlink(DownlinkFrame),
     JoinRequest(JoinRequest),
     JoinAccept(JoinAccept),
+    Status(StatusFrame),
 }
 
 impl Frame {
@@ -80,6 +92,7 @@ impl Frame {
             Frame::Downlink(f) => &f.dev_eui,
             Frame::JoinRequest(f) => &f.dev_eui,
             Frame::JoinAccept(f) => &f.dev_eui,
+            Frame::Status(f) => &f.dev_eui,
         }
     }
 
@@ -89,6 +102,7 @@ impl Frame {
             Frame::Downlink(f) => f.queued_at,
             Frame::JoinRequest(f) => f.received_at,
             Frame::JoinAccept(f) => f.accepted_at,
+            Frame::Status(f) => f.received_at,
         }
     }
 
@@ -96,6 +110,7 @@ impl Frame {
         match self {
             Frame::Uplink(f) => Some(&f.application_id),
             Frame::Downlink(f) => Some(&f.application_id),
+            Frame::Status(f) => Some(&f.application_id),
             _ => None,
         }
     }

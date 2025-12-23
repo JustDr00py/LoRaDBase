@@ -22,6 +22,14 @@ LoRaDB is a specialized database built from scratch in Rust for storing and quer
 - **Automatic Reconnection**: Resilient connection handling
 - **Message Parsing**: JSON deserialization with validation
 
+### HTTP Ingestion
+- **ChirpStack Webhook Support**: Ingest data via HTTP webhooks when MQTT access is unavailable
+- **Supported Events**: Uplink, Join, and Status events
+- **Authenticated**: JWT or API token required for all requests
+- **Same Data Model**: HTTP-ingested data is queryable using the same DSL as MQTT data
+- **Use Cases**: Helium networks, managed ChirpStack instances, webhook-based integrations
+- **See**: [HTTP Ingestion Guide](docs/HTTP_INGESTION.md) for detailed setup instructions
+
 ### Query DSL
 Simple SQL-like query language with nested field projection:
 ```sql
@@ -45,12 +53,15 @@ SELECT received_at, f_port, decoded_payload.object.temperature FROM device '0123
 - **TLS Support**: Optional built-in TLS (use reverse proxy recommended for production)
 - **RESTful Endpoints**:
   - `GET /health` - Health check (no auth)
+  - `POST /ingest?event={type}` - ChirpStack webhook ingestion (auth required)
   - `POST /query` - Execute queries (auth required)
   - `GET /devices` - List devices (auth required)
   - `GET /devices/:dev_eui` - Device info (auth required)
   - `POST /tokens` - Create API token (auth required)
   - `GET /tokens` - List API tokens (auth required)
   - `DELETE /tokens/:token_id` - Revoke API token (auth required)
+  - `GET /retention/policies` - List retention policies (auth required)
+  - `POST /retention/enforce` - Trigger retention enforcement (auth required)
 
 ## Installation
 

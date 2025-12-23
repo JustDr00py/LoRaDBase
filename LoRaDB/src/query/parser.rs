@@ -80,6 +80,7 @@ impl QueryParser {
                 Ok(SelectClause::Downlink)
             }
             Token::Identifier(ref s) if s.eq_ignore_ascii_case("join") => Ok(SelectClause::Join),
+            Token::Identifier(ref s) if s.eq_ignore_ascii_case("status") => Ok(SelectClause::Status),
             Token::Identifier(field) => {
                 // Parse comma-separated field list
                 let mut fields = vec![field];

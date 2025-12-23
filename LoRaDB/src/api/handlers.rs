@@ -1,12 +1,14 @@
+use crate::api::middleware::AuthContext;
 use crate::error::LoraDbError;
+use crate::ingest::chirpstack::ChirpStackParser;
 use crate::query::dsl::QueryResult;
 use crate::query::executor::QueryExecutor;
 use crate::query::parser::QueryParser;
 use crate::security::api_token::ApiTokenStore;
 use crate::storage::StorageEngine;
-use crate::api::middleware::AuthContext;
 use axum::{
-    extract::{Path, State},
+    body::Bytes,
+    extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Json, Response},
     Extension,
@@ -20,6 +22,7 @@ const MAX_TOKEN_NAME_LENGTH: usize = 100;
 const MAX_DEV_EUI_LENGTH: usize = 32;
 const MAX_TOKEN_ID_LENGTH: usize = 64;
 const MAX_APP_ID_LENGTH: usize = 256;
+const MAX_PAYLOAD_SIZE: usize = 1_048_576; // 1MB max for webhook payloads
 
 /// Validate string length
 fn validate_string_length(s: &str, max_len: usize, field_name: &str) -> Result<(), LoraDbError> {
@@ -106,6 +109,20 @@ pub struct TokenInfo {
 pub struct TokenListResponse {
     pub total: usize,
     pub tokens: Vec<TokenInfo>,
+}
+
+/// ChirpStack ingestion query parameter
+#[derive(Debug, Deserialize)]
+pub struct IngestQuery {
+    pub event: String,  // "up", "join", or "status"
+}
+
+/// ChirpStack ingestion response
+#[derive(Debug, Serialize)]
+pub struct IngestResponse {
+    pub success: bool,
+    pub dev_eui: String,
+    pub event_type: String,
 }
 
 /// Error response
@@ -615,6 +632,68 @@ pub async fn enforce_retention(
         .map_err(|e| LoraDbError::StorageError(format!("Failed to enforce retention: {}", e)))?;
 
     Ok(StatusCode::OK)
+}
+
+/// Ingest ChirpStack webhook event
+pub async fn ingest_chirpstack(
+    State(state): State<AppState>,
+    Extension(auth_context): Extension<AuthContext>,
+    Query(query): Query<IngestQuery>,
+    payload: Bytes,
+) -> Result<Json<IngestResponse>, LoraDbError> {
+    // SECURITY: Validate payload size (1MB max)
+    if payload.len() > MAX_PAYLOAD_SIZE {
+        return Err(LoraDbError::MqttParseError(
+            format!("Payload exceeds maximum size of {} bytes", MAX_PAYLOAD_SIZE)
+        ));
+    }
+
+    // Log ingestion attempt with user_id for audit trail
+    let user_id = auth_context.user_id();
+    tracing::info!(
+        user = user_id,
+        event_type = query.event,
+        payload_size = payload.len(),
+        "Received ChirpStack webhook event"
+    );
+
+    // Create parser
+    let parser = ChirpStackParser::new();
+
+    // Parse based on event type
+    let frame = match query.event.as_str() {
+        "up" => parser.parse_uplink(&payload)
+            .map_err(|e| LoraDbError::MqttParseError(format!("Failed to parse uplink: {}", e)))?,
+        "join" => parser.parse_join(&payload)
+            .map_err(|e| LoraDbError::MqttParseError(format!("Failed to parse join: {}", e)))?,
+        "status" => parser.parse_status(&payload)
+            .map_err(|e| LoraDbError::MqttParseError(format!("Failed to parse status: {}", e)))?,
+        other => {
+            tracing::warn!(event_type = other, "Unsupported event type");
+            return Err(LoraDbError::QueryParseError(
+                format!("Unsupported event type: {}. Supported: up, join, status", other)
+            ));
+        }
+    };
+
+    let dev_eui = frame.dev_eui().to_string();
+
+    // Write directly to storage (async, no channel needed)
+    state.storage.write(frame).await
+        .map_err(|e| LoraDbError::StorageError(format!("Failed to write frame: {}", e)))?;
+
+    tracing::info!(
+        user = user_id,
+        event_type = query.event,
+        dev_eui = dev_eui,
+        "Successfully ingested event"
+    );
+
+    Ok(Json(IngestResponse {
+        success: true,
+        dev_eui,
+        event_type: query.event,
+    }))
 }
 
 #[cfg(test)]

@@ -21,6 +21,8 @@ pub enum SelectClause {
     Downlink,
     /// SELECT join - only join request/accept frames
     Join,
+    /// SELECT status - only status frames (battery/margin)
+    Status,
     /// SELECT field1, field2, ... - specific fields
     Fields(Vec<String>),
 }

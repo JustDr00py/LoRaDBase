@@ -1,7 +1,7 @@
 use crate::api::handlers::{
     create_token, delete_device, enforce_retention, execute_query,
-    get_application_retention, get_device, get_global_retention, health_check, list_devices,
-    list_retention_policies, list_tokens, revoke_token, AppState,
+    get_application_retention, get_device, get_global_retention, health_check, ingest_chirpstack,
+    list_devices, list_retention_policies, list_tokens, revoke_token, AppState,
 };
 use crate::api::middleware::{jwt_auth, security_headers, AuthMiddleware};
 use crate::config::ApiConfig;
@@ -76,6 +76,10 @@ impl HttpServer {
 
         // Protected routes (authentication required)
         let protected_routes = Router::new()
+            // ChirpStack webhook ingestion endpoint
+            // NOTE: Rate limiting should be added when upgrading to Axum 0.7+
+            // For now, relies on authentication and default 2MB body limit
+            .route("/ingest", post(ingest_chirpstack))
             .route("/query", post(execute_query))
             .route("/devices", get(list_devices))
             .route("/devices/:dev_eui", get(get_device))

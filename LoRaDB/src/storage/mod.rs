@@ -150,6 +150,7 @@ impl StorageEngine {
             frame.dev_eui().clone(),
             match &frame {
                 Frame::Uplink(f) => f.device_name.clone(),
+                Frame::Status(f) => f.device_name.clone(),
                 Frame::Downlink(_) => None,
                 _ => None,
             },
