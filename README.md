@@ -4,10 +4,11 @@ A complete LoRaWAN data management solution combining a high-performance time-se
 
 ## Overview
 
-This repository contains two integrated components:
+This repository contains three integrated components:
 
 1. **LoRaDB**: A specialized database built in Rust for storing and querying LoRaWAN network traffic
 2. **LoRaDB-UI**: A web-based interface for managing devices, executing queries, and generating tokens
+3. **LoRaDB-manager**: A Textual TUI application for managing multiple LoRaDB instances on a single machine
 
 ## Repository Structure
 
@@ -22,6 +23,9 @@ LoRaDBase/
 │   ├── frontend/            # React application
 │   ├── backend/             # Node.js API server
 │   └── docker-compose.yml   # UI deployment
+├── LoRaDB-manager/          # TUI instance manager (Python)
+│   ├── run.sh               # Quick start script
+│   └── README.md            # Manager documentation
 └── README.md                # This file
 ```
 
@@ -94,11 +98,40 @@ SELECT received_at, f_port, decoded_payload.object.temperature FROM device '0123
 
 ---
 
+## LoRaDB-manager - Multi-Instance Manager
+
+**A Textual TUI application for managing multiple LoRaDB instances on a single machine**
+
+LoRaDB-manager provides a terminal-based user interface for deploying, monitoring, and managing multiple LoRaDB instances. It's ideal for development environments, testing setups, or edge deployments that need to run multiple isolated LoRaDB instances.
+
+### Features
+
+- **Multi-Instance Management**: Deploy and manage multiple LoRaDB instances from a single interface
+- **Interactive TUI**: Built with Textual for a modern terminal user experience
+- **Docker-Based Deployment**: Automated Docker container orchestration for each instance
+- **Configuration Management**: Easy configuration and environment variable management per instance
+- **Real-Time Monitoring**: Monitor status and logs of all running instances
+- **Quick Start**: Get up and running with `./run.sh`
+
+### Quick Start
+
+```bash
+cd LoRaDB-manager
+./run.sh
+```
+
+See [LoRaDB-manager/README.md](./LoRaDB-manager/README.md) for detailed documentation and [LoRaDB-manager/QUICKSTART.md](./LoRaDB-manager/QUICKSTART.md) for a step-by-step guide.
+
+---
+
 ## Quick Start
+
+**For managing multiple LoRaDB instances**: Use [LoRaDB-manager](#loradb-manager---multi-instance-manager) instead. For single-instance production deployment, follow the steps below.
 
 ### Prerequisites
 - Docker 20.10+
 - Docker Compose 2.0+
+- Python 3.10+ (for LoRaDB-manager)
 - (Optional) Reverse proxy like Caddy or nginx for production HTTPS
 
 ### 1. Deploy LoRaDB (Database)
@@ -734,6 +767,10 @@ Additional documentation is available in each component directory:
 - [LoRaDB-UI/README.md](LoRaDB-UI/README.md) - Complete UI documentation
 - [LoRaDB-UI/REMOTE_SETUP.md](LoRaDB-UI/REMOTE_SETUP.md) - Remote deployment guide
 - [LoRaDB-UI/API_TOKENS.md](LoRaDB-UI/API_TOKENS.md) - API token usage in UI
+
+### LoRaDB-manager Documentation
+- [LoRaDB-manager/README.md](LoRaDB-manager/README.md) - Complete manager documentation
+- [LoRaDB-manager/QUICKSTART.md](LoRaDB-manager/QUICKSTART.md) - Quick start guide
 
 ---
 
