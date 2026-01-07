@@ -781,12 +781,6 @@ Additional documentation is available in each component directory:
 - ❌ No clustering/replication (single-node only)
 - ❌ No time-series aggregation functions (use external tools)
 
-### Future Enhancements
-- [ ] Multi-node clustering
-- [ ] Aggregate functions (AVG, MIN, MAX, COUNT)
-- [ ] Grafana datasource plugin
-- [ ] Prometheus metrics exporter
-
 ---
 
 ## Contributing
