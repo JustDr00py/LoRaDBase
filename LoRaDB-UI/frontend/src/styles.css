@@ -480,3 +480,1103 @@ pre {
   color: var(--text-secondary);
   font-size: 1.125rem;
 }
+
+/* ==================== Dashboard Widgets Styles ==================== */
+
+/* Dashboard Page */
+.dashboard-page {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 20px;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Time Range Control */
+.time-range-control {
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.control-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  position: relative;
+  width: 100%;
+  min-height: 100px;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.react-grid-item {
+  box-sizing: border-box;
+}
+
+.grid-item {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Widget Container */
+.widget-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.widget-container:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
+  cursor: move;
+}
+
+.widget-header h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.widget-actions {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.widget-edit-btn,
+.widget-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: color 0.2s;
+}
+
+.widget-edit-btn:hover {
+  color: var(--primary-color);
+}
+
+.widget-delete-btn:hover {
+  color: var(--danger-color);
+}
+
+.widget-body {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.widget-loading,
+.widget-error,
+.widget-no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary);
+  flex: 1;
+  height: 100%;
+}
+
+.widget-error {
+  color: var(--danger-color);
+  font-size: 0.875rem;
+}
+
+/* Current Value Widget */
+.current-value-widget {
+  text-align: center;
+  padding: 12px 8px;
+  border-left: 4px solid var(--primary-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
+.current-value-widget .value {
+  font-size: clamp(1.25rem, 4vw, 2.5rem);
+  font-weight: bold;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.current-value-widget .unit {
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.current-value-widget .threshold-label {
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.current-value-widget .timestamp {
+  font-size: clamp(0.625rem, 1.2vw, 0.75rem);
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Time Series Widget */
+.time-series-widget {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
+/* Gauge Widget */
+.gauge-widget {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Status Widget */
+.status-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+  flex: 1;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: white;
+  font-weight: 600;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+}
+
+.status-icon {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+}
+
+.status-label {
+  font-size: clamp(0.75rem, 2vw, 1rem);
+}
+
+.status-value {
+  font-size: clamp(0.875rem, 2.2vw, 1.125rem);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ==================== Composite Widget Styles ==================== */
+
+/* Composite Widget Container */
+.composite-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+
+.composite-body {
+  flex: 1;
+  display: flex;
+  padding: 0;
+  overflow: auto;
+  min-height: 0;
+}
+
+/* Layout Types */
+.composite-layout-grid .composite-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.composite-layout-vertical .composite-body {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.composite-layout-horizontal .composite-body {
+  flex-direction: row;
+  gap: 16px;
+}
+
+/* Section Styles */
+.composite-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-secondary, #f9fafb);
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.composite-section-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.composite-section-widgets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Widget Item Sizes */
+.composite-widget-item {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.composite-widget-item.widget-small .current-value-widget .value {
+  font-size: 1.25rem;
+}
+
+.composite-widget-item.widget-small .time-series-widget {
+  height: 120px;
+}
+
+.composite-widget-item.widget-medium .current-value-widget .value {
+  font-size: 1.5rem;
+}
+
+.composite-widget-item.widget-medium .time-series-widget {
+  height: 180px;
+}
+
+.composite-widget-item.widget-large .current-value-widget .value {
+  font-size: 2rem;
+}
+
+.composite-widget-item.widget-large .time-series-widget {
+  height: 250px;
+}
+
+/* Template Customization UI (in Modal) */
+.template-customization {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-secondary, #f9fafb);
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.template-customization h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.template-section-config {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-reorder-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btn-icon {
+  background: var(--bg-secondary, #f3f4f6);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: var(--bg-hover, #e5e7eb);
+  color: var(--text-primary, #111827);
+}
+
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.display-types {
+  margin-left: 24px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Radio Group Styles */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.radio-label:hover {
+  background-color: var(--bg-secondary, #f9fafb);
+}
+
+.radio-label input[type="radio"] {
+  cursor: pointer;
+}
+
+.radio-label span {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+/* Checkbox Label Styles */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-label.small {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.checkbox-label.small input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+}
+
+/* Help Text */
+.help-text {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #6b7280);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 40px;
+  margin: 40px 20px 0;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.empty-state h2 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+/* Widget Config Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--surface-color);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.modal-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.required {
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.advanced-settings {
+  margin-top: 24px;
+  padding: 0;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.advanced-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.advanced-settings-header:hover {
+  background: var(--bg-color);
+}
+
+.advanced-settings-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.advanced-settings-header .toggle-icon {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.advanced-settings-content {
+  padding: 0 16px 16px 16px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.checkbox-label span {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.measurement-info {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--bg-color);
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.measurement-info strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.measurement-info div {
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+/* React Grid Layout Overrides */
+.react-grid-layout {
+  position: relative;
+  width: 100%;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+  box-sizing: border-box;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform, width, height;
+}
+
+.react-grid-item.resizing {
+  z-index: 100;
+  will-change: width, height;
+  transition: none;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 100;
+  will-change: transform;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--primary-color);
+  opacity: 0.2;
+  transition-duration: 100ms;
+  z-index: 2;
+  border-radius: 8px;
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+
+.react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+
+.react-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+
+.react-resizable-handle-se::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
+}
+
+/* Responsive adjustments for dashboard */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .dashboard-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-actions button {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-width: none;
+  }
+}
+
+/* Y-Axis Controls for Template Sections */
+.section-y-axis-controls {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.section-y-axis-controls h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.y-axis-inputs {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-group-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.form-group-inline label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 40px;
+}
+
+.form-group-inline input[type="number"] {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.form-group-inline input[type="number"]:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Composite Widget Header with Edit Button */
+.composite-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background: var(--surface-color, #fff);
+}
+
+.edit-layout-btn {
+  padding: 6px 12px;
+  background: var(--primary-color, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.edit-layout-btn:hover {
+  background: var(--primary-hover, #1d4ed8);
+}
+
+/* Inner Grid Container */
+.composite-grid-container {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.composite-inner-grid {
+  min-height: 400px;
+}
+
+/* Inner Grid Item */
+.inner-grid-item {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Inner Widget Header (drag handle - only visible in edit mode) */
+.inner-widget-header {
+  padding: 8px 12px;
+  background: var(--bg-color, #f9fafb);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  cursor: move;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inner-widget-header::before {
+  content: '⋮';
+  color: var(--text-secondary, #6b7280);
+  font-weight: bold;
+}
+
+.inner-widget-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  flex: 1;
+}
+
+.inner-widget-customize-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 1rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.inner-widget-customize-btn:hover {
+  background: var(--hover-color, #f3f4f6);
+  color: var(--primary-color, #3b82f6);
+}
+
+/* Inner Widget Content */
+.inner-widget-content {
+  flex: 1;
+  padding: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Important for flex child to shrink */
+}
+
+/* Resize Handle for Inner Items */
+.inner-grid-item .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+
+.inner-grid-item .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-secondary, #6b7280);
+  border-bottom: 2px solid var(--text-secondary, #6b7280);
+}
+
+/* ========================================
+   Measurement Customization Modal
+   ======================================== */
+
+.measurement-customization-modal {
+  max-width: 700px;
+}
+
+.customization-info {
+  padding: 12px;
+  background: var(--bg-color, #f9fafb);
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.customization-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--text-primary, #1f2937);
+}
+
+.form-help {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+  margin: 0 0 16px 0;
+}
+
+.color-input {
+  width: 60px;
+  height: 36px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.color-preview {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  margin-left: 8px;
+}
+
+/* Threshold Configuration */
+.threshold-config {
+  margin-bottom: 12px;
+}
+
+.threshold-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-color, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+}
+
+.threshold-row select,
+.threshold-row input[type="number"],
+.threshold-row input[type="text"] {
+  flex: 1;
+  min-width: 80px;
+}
+
+.threshold-row .color-input {
+  flex: 0 0 60px;
+}
+
+/* Status Condition Configuration */
+.status-condition-config {
+  margin-bottom: 12px;
+}
+
+.status-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-color, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+}
+
+.status-row select,
+.status-row input[type="number"],
+.status-row input[type="text"] {
+  flex: 1;
+  min-width: 80px;
+}
+
+/* Gauge Zone Configuration */
+.gauge-zone-config {
+  margin-bottom: 12px;
+}
+
+.zone-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-color, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+}
+
+.zone-row input[type="number"] {
+  flex: 1;
+  min-width: 80px;
+}
+
+.zone-row .color-input {
+  flex: 0 0 60px;
+}
+
+/* Remove Button */
+.btn-remove {
+  background: none;
+  border: none;
+  color: var(--danger-color, #ef4444);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-remove:hover {
+  background: var(--danger-light, #fee2e2);
+}
+
+/* Modal Close Button */
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: var(--hover-color, #f3f4f6);
+  color: var(--text-primary, #1f2937);
+}

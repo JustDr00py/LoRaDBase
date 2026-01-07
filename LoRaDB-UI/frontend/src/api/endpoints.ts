@@ -5,8 +5,6 @@ import type {
   DeviceInfo,
   QueryRequest,
   QueryResult,
-  GenerateTokenRequest,
-  TokenResponse,
   VerifyTokenRequest,
   VerifyTokenResponse,
   CreateApiTokenRequest,
@@ -16,20 +14,95 @@ import type {
   GlobalRetentionPolicyResponse,
   SetRetentionPolicyRequest,
   RetentionEnforceResponse,
+  Server,
+  ServerListResponse,
+  CreateServerRequest,
+  UpdateServerRequest,
+  AuthenticateServerRequest,
+  SessionResponse,
+  ConnectionTestResponse,
+  MasterSessionResponse,
+  MasterPasswordStatusResponse,
+  BackupData,
+  BackupFile,
+  ImportResult,
+  ImportStrategy,
 } from '../types/api';
 
-// Authentication
-export const generateToken = async (
-  data: GenerateTokenRequest
-): Promise<TokenResponse> => {
-  const response = await apiClient.post<TokenResponse>('/api/auth/generate-token', data);
+// Server Management
+export const listServers = async (): Promise<ServerListResponse> => {
+  const response = await apiClient.get<ServerListResponse>('/api/servers');
   return response.data;
 };
 
+export const createServer = async (data: CreateServerRequest): Promise<Server> => {
+  const response = await apiClient.post<Server>('/api/servers', data);
+  return response.data;
+};
+
+export const getServer = async (serverId: number): Promise<Server> => {
+  const response = await apiClient.get<Server>(`/api/servers/${serverId}`);
+  return response.data;
+};
+
+export const authenticateServer = async (
+  serverId: number,
+  data: AuthenticateServerRequest
+): Promise<SessionResponse> => {
+  const response = await apiClient.post<SessionResponse>(
+    `/api/servers/${serverId}/authenticate`,
+    data
+  );
+  return response.data;
+};
+
+export const deleteServer = async (serverId: number): Promise<void> => {
+  await apiClient.delete(`/api/servers/${serverId}`);
+};
+
+export const updateServer = async (
+  serverId: number,
+  data: UpdateServerRequest
+): Promise<Server> => {
+  const response = await apiClient.put<Server>(`/api/servers/${serverId}`, data);
+  return response.data;
+};
+
+export const testServerConnection = async (
+  serverId: number
+): Promise<ConnectionTestResponse> => {
+  const response = await apiClient.post<ConnectionTestResponse>(
+    `/api/servers/${serverId}/test-connection`
+  );
+  return response.data;
+};
+
+// Authentication
 export const verifyToken = async (
   data: VerifyTokenRequest
 ): Promise<VerifyTokenResponse> => {
   const response = await apiClient.post<VerifyTokenResponse>('/api/auth/verify-token', data);
+  return response.data;
+};
+
+export const logout = async (): Promise<void> => {
+  await apiClient.post('/api/auth/logout');
+};
+
+export const verifyMasterPassword = async (
+  password: string
+): Promise<MasterSessionResponse> => {
+  const response = await apiClient.post<MasterSessionResponse>(
+    '/api/auth/verify-master-password',
+    { password }
+  );
+  return response.data;
+};
+
+export const getMasterPasswordStatus = async (): Promise<MasterPasswordStatusResponse> => {
+  const response = await apiClient.get<MasterPasswordStatusResponse>(
+    '/api/auth/master-password-status'
+  );
   return response.data;
 };
 
@@ -118,4 +191,45 @@ export const deleteApplicationRetentionPolicy = async (applicationId: string): P
 export const enforceRetention = async (): Promise<RetentionEnforceResponse> => {
   const response = await apiClient.post<RetentionEnforceResponse>('/api/retention/enforce', {});
   return response.data;
+};
+
+// Backup & Restore
+export const exportBackup = async (
+  includeDeviceTypes: boolean = true,
+  saveAutomatic: boolean = false,
+  dashboards?: any,
+  settings?: any
+): Promise<BackupData> => {
+  const response = await apiClient.post<BackupData>('/api/backup/export', {
+    includeDeviceTypes,
+    saveAutomatic,
+    dashboards,
+    settings,
+  });
+  return response.data;
+};
+
+export const importBackup = async (
+  backup: BackupData,
+  strategy: ImportStrategy
+): Promise<ImportResult> => {
+  const response = await apiClient.post<ImportResult>('/api/backup/import', {
+    backup,
+    strategy,
+  });
+  return response.data;
+};
+
+export const listAutomaticBackups = async (): Promise<BackupFile[]> => {
+  const response = await apiClient.get<BackupFile[]>('/api/backup/list');
+  return response.data;
+};
+
+export const downloadAutomaticBackup = async (filename: string): Promise<BackupData> => {
+  const response = await apiClient.get<BackupData>(`/api/backup/download/${filename}`);
+  return response.data;
+};
+
+export const deleteAutomaticBackup = async (filename: string): Promise<void> => {
+  await apiClient.delete(`/api/backup/${filename}`);
 };

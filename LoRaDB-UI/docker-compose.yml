@@ -10,10 +10,17 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=production
-      - LORADB_API_URL=${LORADB_API_URL:-http://loradb:8080}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION_HOURS=${JWT_EXPIRATION_HOURS:-1}
+      - MASTER_PASSWORD=${MASTER_PASSWORD:-}
+      - MASTER_SESSION_HOURS=${MASTER_SESSION_HOURS:-24}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+      - DATABASE_PATH=/app/data/servers.db
+      - BACKUP_ENABLED=${BACKUP_ENABLED:-true}
+      - BACKUP_SCHEDULE=${BACKUP_SCHEDULE:-0 2 * * *}
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-7}
+    volumes:
+      - loradb-ui-data:/app/data
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     networks:
@@ -37,6 +44,8 @@ services:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
     container_name: loradb-ui-frontend
     restart: unless-stopped
+    volumes:
+      - ./device-types:/usr/share/nginx/html/device-types:ro,z
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
@@ -53,3 +62,7 @@ services:
 networks:
   loradb-network:
     driver: bridge
+
+volumes:
+  loradb-ui-data:
+    driver: local

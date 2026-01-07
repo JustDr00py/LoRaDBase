@@ -1,0 +1,136 @@
+{
+  "deviceType": "generic",
+  "name": "Generic LoRaWAN Sensor",
+  "manufacturer": "Generic",
+  "description": "Generic device template with basic measurement configurations",
+  "version": "1.0.0",
+  "measurements": [
+    {
+      "id": "temperature",
+      "path": "decoded_payload.temperature",
+      "name": "Temperature",
+      "unit": "°C",
+      "decimals": 1,
+      "defaultWidget": "time-series",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": -50, "max": 0, "color": "#3b82f6", "label": "Cold" },
+            { "min": 0, "max": 30, "color": "#10b981", "label": "Normal" },
+            { "min": 30, "max": 100, "color": "#f59e0b", "label": "Warm" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "showArea": true,
+          "color": "#2563eb"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": -20,
+          "max": 50,
+          "zones": [
+            { "from": -20, "to": 0, "color": "#3b82f6" },
+            { "from": 0, "to": 30, "color": "#10b981" },
+            { "from": 30, "to": 50, "color": "#f59e0b" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 0, "status": "info", "label": "Cold" },
+            { "operator": "between", "min": 0, "max": 30, "status": "success", "label": "Normal" },
+            { "operator": "gt", "value": 30, "status": "warning", "label": "Warm" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "humidity",
+      "path": "decoded_payload.humidity",
+      "name": "Humidity",
+      "unit": "%",
+      "decimals": 0,
+      "defaultWidget": "gauge",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 30, "color": "#ef4444", "label": "Dry" },
+            { "min": 30, "max": 70, "color": "#10b981", "label": "Normal" },
+            { "min": 70, "max": 100, "color": "#3b82f6", "label": "Humid" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 100,
+          "showArea": true,
+          "color": "#8b5cf6"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 100,
+          "zones": [
+            { "from": 0, "to": 30, "color": "#ef4444" },
+            { "from": 30, "to": 70, "color": "#10b981" },
+            { "from": 70, "to": 100, "color": "#3b82f6" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 30, "status": "warning", "label": "Dry" },
+            { "operator": "between", "min": 30, "max": 70, "status": "success", "label": "Normal" },
+            { "operator": "gt", "value": 70, "status": "info", "label": "Humid" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "battery",
+      "path": "decoded_payload.battery",
+      "name": "Battery",
+      "unit": "%",
+      "decimals": 0,
+      "defaultWidget": "gauge",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 20, "color": "#ef4444", "label": "Low" },
+            { "min": 20, "max": 50, "color": "#f59e0b", "label": "Medium" },
+            { "min": 50, "max": 100, "color": "#10b981", "label": "Good" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 100,
+          "showArea": false,
+          "color": "#10b981"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 100,
+          "zones": [
+            { "from": 0, "to": 20, "color": "#ef4444" },
+            { "from": 20, "to": 50, "color": "#f59e0b" },
+            { "from": 50, "to": 100, "color": "#10b981" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 20, "status": "error", "label": "Low Battery" },
+            { "operator": "between", "min": 20, "max": 50, "status": "warning", "label": "Medium" },
+            { "operator": "gte", "value": 50, "status": "success", "label": "Good" }
+          ]
+        }
+      }
+    }
+  ]
+}

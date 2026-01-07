@@ -66,6 +66,47 @@ export interface RxInfo {
   [key: string]: any;
 }
 
+// Server Management
+export interface Server {
+  id: number;
+  name: string;
+  host: string;
+  created_at: string;
+}
+
+export interface CreateServerRequest {
+  name: string;
+  host: string;
+  apiKey: string;
+  password: string;
+  passwordConfirm: string;
+}
+
+export interface UpdateServerRequest {
+  name: string;
+  host: string;
+}
+
+export interface ServerListResponse {
+  servers: Server[];
+}
+
+export interface AuthenticateServerRequest {
+  password: string;
+}
+
+export interface SessionResponse {
+  token: string;
+  expiresAt: string;
+  server: Server;
+}
+
+export interface ConnectionTestResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
 // Authentication
 export interface GenerateTokenRequest {
   username: string;
@@ -88,6 +129,20 @@ export interface VerifyTokenResponse {
   username?: string;
   expiresAt?: string;
   issuedAt?: string;
+}
+
+// Master Password Authentication
+export interface VerifyMasterPasswordRequest {
+  password: string;
+}
+
+export interface MasterSessionResponse {
+  token: string;
+  expiresAt: string;
+}
+
+export interface MasterPasswordStatusResponse {
+  enabled: boolean;
 }
 
 // API Token Management
@@ -228,4 +283,68 @@ export interface TimeSeriesDataPoint {
   energy?: number;
   gatewayCount?: number;
   frequency?: number;  // Frequency in MHz
+}
+
+// Backup & Restore
+export interface BackupData {
+  version: string;
+  timestamp: string;
+  metadata: {
+    type: 'full' | 'partial';
+    source: 'manual' | 'automatic';
+  };
+  data: {
+    servers: BackupServerData[];
+    deviceTypes: DeviceTypeBackup[];
+    dashboards?: any; // Dashboard layouts from localStorage
+    settings?: any; // User settings from localStorage
+  };
+}
+
+export interface BackupServerData {
+  name: string;
+  host: string;
+  api_key: string;
+  api_key_iv: string;
+  api_key_auth_tag: string;
+  api_key_salt: string;
+  password_hash: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeviceTypeBackup {
+  filename: string;
+  content: any;
+}
+
+export interface ImportResult {
+  servers: {
+    imported: number;
+    skipped: number;
+    errors: string[];
+  };
+  deviceTypes: {
+    imported: number;
+    skipped: number;
+    errors: string[];
+  };
+}
+
+export interface BackupFile {
+  filename: string;
+  timestamp: string;
+  size: number;
+}
+
+export type ImportStrategy = 'merge' | 'replace';
+
+export interface ExportBackupRequest {
+  includeDeviceTypes?: boolean;
+  saveAutomatic?: boolean;
+}
+
+export interface ImportBackupRequest {
+  backup: BackupData;
+  strategy: ImportStrategy;
 }

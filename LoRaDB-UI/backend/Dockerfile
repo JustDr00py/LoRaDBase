@@ -7,8 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (use npm install to generate lock file if needed)
+RUN npm install
 
 # Copy source code
 COPY src ./src
@@ -25,14 +25,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
-# Create non-root user
+# Create non-root user and data directory
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+    adduser -S nodejs -u 1001 && \
+    mkdir -p /app/data && \
+    chown -R nodejs:nodejs /app/data
 
 USER nodejs
 

@@ -1,0 +1,350 @@
+{
+  "deviceType": "mclimate-16aspm",
+  "name": "MClimate 16ASPM Smart Power Meter",
+  "manufacturer": "MClimate",
+  "description": "LoRaWAN Smart Power Meter with relay control, AC current/voltage monitoring, and energy consumption tracking",
+  "version": "1.0.0",
+  "measurements": [
+    {
+      "id": "power",
+      "path": "decoded_payload.object.power_W",
+      "name": "Power",
+      "unit": "W",
+      "decimals": 1,
+      "defaultWidget": "time-series",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 100, "color": "#10b981", "label": "Low" },
+            { "min": 100, "max": 1000, "color": "#f59e0b", "label": "Medium" },
+            { "min": 1000, "max": 3500, "color": "#ef4444", "label": "High" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 2000,
+          "showArea": true,
+          "color": "#8b5cf6"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 2000,
+          "zones": [
+            { "from": 0, "to": 100, "color": "#10b981" },
+            { "from": 100, "to": 1000, "color": "#f59e0b" },
+            { "from": 1000, "to": 2000, "color": "#ef4444" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "eq", "value": 0, "status": "info", "label": "Off" },
+            { "operator": "between", "min": 0.1, "max": 100, "status": "success", "label": "Low Power" },
+            { "operator": "between", "min": 100, "max": 1000, "status": "warning", "label": "Medium Power" },
+            { "operator": "gt", "value": 1000, "status": "error", "label": "High Power" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ac_voltage",
+      "path": "decoded_payload.object.acVoltage_V",
+      "name": "AC Voltage",
+      "unit": "V",
+      "decimals": 1,
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 110, "color": "#ef4444", "label": "Low" },
+            { "min": 110, "max": 125, "color": "#10b981", "label": "Normal" },
+            { "min": 125, "max": 140, "color": "#f59e0b", "label": "High" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 100,
+          "yAxisMax": 140,
+          "showArea": false,
+          "color": "#3b82f6"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 100,
+          "max": 140,
+          "zones": [
+            { "from": 100, "to": 110, "color": "#ef4444" },
+            { "from": 110, "to": 125, "color": "#10b981" },
+            { "from": 125, "to": 140, "color": "#f59e0b" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 110, "status": "error", "label": "Low Voltage" },
+            { "operator": "between", "min": 110, "max": 125, "status": "success", "label": "Normal" },
+            { "operator": "gt", "value": 125, "status": "warning", "label": "High Voltage" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ac_current",
+      "path": "decoded_payload.object.acCurrent_mA",
+      "name": "AC Current",
+      "unit": "mA",
+      "decimals": 0,
+      "defaultWidget": "time-series",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 1000, "color": "#10b981", "label": "Low" },
+            { "min": 1000, "max": 10000, "color": "#f59e0b", "label": "Medium" },
+            { "min": 10000, "max": 30000, "color": "#ef4444", "label": "High" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 15000,
+          "showArea": true,
+          "color": "#f59e0b"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 15000,
+          "zones": [
+            { "from": 0, "to": 1000, "color": "#10b981" },
+            { "from": 1000, "to": 10000, "color": "#f59e0b" },
+            { "from": 10000, "to": 15000, "color": "#ef4444" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "eq", "value": 0, "status": "info", "label": "No Current" },
+            { "operator": "between", "min": 0.1, "max": 1000, "status": "success", "label": "Low" },
+            { "operator": "between", "min": 1000, "max": 10000, "status": "warning", "label": "Medium" },
+            { "operator": "gt", "value": 10000, "status": "error", "label": "High" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "energy",
+      "path": "decoded_payload.object.energy_kWh",
+      "name": "Energy Consumption",
+      "unit": "kWh",
+      "decimals": 3,
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 1000, "color": "#10b981", "label": "Low" },
+            { "min": 1000, "max": 5000, "color": "#f59e0b", "label": "Medium" },
+            { "min": 5000, "max": 99999, "color": "#ef4444", "label": "High" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "showArea": false,
+          "color": "#06b6d4"
+        },
+        "gauge": {
+          "enabled": false
+        },
+        "status": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "internal_temperature",
+      "path": "decoded_payload.object.internalTemperature",
+      "name": "Internal Temperature",
+      "unit": "°C",
+      "decimals": 0,
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": -40, "max": 30, "color": "#10b981", "label": "Normal" },
+            { "min": 30, "max": 50, "color": "#f59e0b", "label": "Warm" },
+            { "min": 50, "max": 85, "color": "#ef4444", "label": "Hot" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 60,
+          "showArea": true,
+          "color": "#ec4899"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 60,
+          "zones": [
+            { "from": 0, "to": 30, "color": "#10b981" },
+            { "from": 30, "to": 50, "color": "#f59e0b" },
+            { "from": 50, "to": 60, "color": "#ef4444" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 30, "status": "success", "label": "Normal" },
+            { "operator": "between", "min": 30, "max": 50, "status": "warning", "label": "Warm" },
+            { "operator": "gt", "value": 50, "status": "error", "label": "Hot" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "relay_state",
+      "path": "decoded_payload.object.relayState",
+      "name": "Relay State",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "status",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            {
+              "valueType": "string",
+              "operator": "eq",
+              "value": "OFF",
+              "status": "info",
+              "label": "Relay OFF"
+            },
+            {
+              "valueType": "string",
+              "operator": "eq",
+              "value": "ON",
+              "status": "success",
+              "label": "Relay ON"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "widgetTemplates": [
+    {
+      "id": "power-overview",
+      "name": "Power Monitoring Overview",
+      "description": "Current power, voltage, and current monitoring",
+      "layout": "grid",
+      "defaultSize": { "w": 8, "h": 6 },
+      "sections": [
+        {
+          "measurementId": "relay_state",
+          "displayTypes": ["status"]
+        },
+        {
+          "measurementId": "power",
+          "displayTypes": ["current-value", "time-series"]
+        },
+        {
+          "measurementId": "ac_voltage",
+          "displayTypes": ["current-value"]
+        },
+        {
+          "measurementId": "ac_current",
+          "displayTypes": ["current-value"]
+        },
+        {
+          "measurementId": "internal_temperature",
+          "displayTypes": ["current-value"]
+        }
+      ]
+    },
+    {
+      "id": "energy-tracking",
+      "name": "Energy Consumption Tracking",
+      "description": "Energy usage and power consumption over time",
+      "layout": "vertical",
+      "defaultSize": { "w": 8, "h": 6 },
+      "sections": [
+        {
+          "measurementId": "energy",
+          "displayTypes": ["current-value", "time-series"]
+        },
+        {
+          "measurementId": "power",
+          "displayTypes": ["time-series"]
+        }
+      ]
+    },
+    {
+      "id": "compact-status",
+      "name": "Compact Status View",
+      "description": "All measurements in a compact format",
+      "layout": "vertical",
+      "defaultSize": { "w": 3, "h": 4 },
+      "sections": [
+        {
+          "measurementId": "relay_state",
+          "displayTypes": ["status"]
+        },
+        {
+          "measurementId": "power",
+          "displayTypes": ["current-value"]
+        },
+        {
+          "measurementId": "ac_voltage",
+          "displayTypes": ["current-value"]
+        },
+        {
+          "measurementId": "energy",
+          "displayTypes": ["current-value"]
+        },
+        {
+          "measurementId": "internal_temperature",
+          "displayTypes": ["current-value"]
+        }
+      ]
+    },
+    {
+      "id": "gauges",
+      "name": "Gauge Dashboard",
+      "description": "Circular gauges for power, voltage, and temperature",
+      "layout": "horizontal",
+      "defaultSize": { "w": 9, "h": 4 },
+      "sections": [
+        {
+          "measurementId": "power",
+          "displayTypes": ["gauge"]
+        },
+        {
+          "measurementId": "ac_voltage",
+          "displayTypes": ["gauge"]
+        },
+        {
+          "measurementId": "internal_temperature",
+          "displayTypes": ["gauge"]
+        }
+      ]
+    }
+  ]
+}
