@@ -111,10 +111,25 @@ class DockerManager:
 
     def rebuild_instance(self, metadata: InstanceMetadata):
         """
-        Rebuild instance (stops, rebuilds Docker images, starts).
+        Rebuild instance (now performs image update instead).
 
-        This rebuilds the Docker images from the templates, which is useful when
-        the LoRaDB code has been updated.
+        Note: Since we use pre-built images, this pulls the latest
+        image instead of rebuilding from source.
+
+        Args:
+            metadata: Instance metadata
+
+        Raises:
+            RuntimeError: If docker-compose command fails
+        """
+        # Use the new update method
+        self.update_instance(metadata)
+
+    def update_instance(self, metadata: InstanceMetadata):
+        """
+        Update instance to use latest Docker image.
+
+        Pulls the latest image from registry and restarts the instance.
 
         Args:
             metadata: Instance metadata
@@ -128,8 +143,8 @@ class DockerManager:
         self.stop_instance(metadata)
         time.sleep(2)
 
-        # Rebuild LoRaDB image
-        self._compose_build(loradb_compose, f"loradb-{metadata.instance_id}")
+        # Pull latest images
+        self._compose_pull(loradb_compose, f"loradb-{metadata.instance_id}")
 
         # Start with new images
         self.start_instance(metadata)
@@ -296,6 +311,27 @@ class DockerManager:
         )
         if result.returncode != 0:
             raise RuntimeError(f"docker compose build failed: {result.stderr}")
+
+    def _compose_pull(self, compose_file: Path, project_name: str):
+        """
+        Execute docker compose pull to update images.
+
+        Args:
+            compose_file: Path to docker-compose.yml
+            project_name: Unique project name for this compose stack
+
+        Raises:
+            RuntimeError: If command fails
+        """
+        result = subprocess.run(
+            ["docker", "compose", "-p", project_name, "-f", str(compose_file), "pull"],
+            cwd=compose_file.parent,
+            capture_output=True,
+            text=True,
+            timeout=Config.DOCKER_COMPOSE_TIMEOUT * 2  # Pulling can take time
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"docker compose pull failed: {result.stderr}")
 
     def _wait_for_container_healthy(self, container_name: str, timeout: int = 60):
         """

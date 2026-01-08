@@ -13,7 +13,9 @@ class Config:
     _BASE_DIR = Path(__file__).parent.parent.parent
 
     INSTANCES_ROOT = Path.home() / ".loradb-instances"
-    LORADB_TEMPLATE = _BASE_DIR / "LoRaDB"
+    LORADB_TEMPLATE = _BASE_DIR  # Points to repository root
+    TEMPLATE_DOCKER_COMPOSE = _BASE_DIR / "docker-compose.yml"
+    TEMPLATE_ENV_EXAMPLE = _BASE_DIR / ".env.example"
 
     # Port allocation
     PORT_RANGE_MIN = 8000
@@ -43,11 +45,17 @@ class Config:
         Raises:
             RuntimeError: If configuration is invalid
         """
-        # Check templates exist
-        if not cls.LORADB_TEMPLATE.exists():
+        # Check template files exist
+        if not cls.TEMPLATE_DOCKER_COMPOSE.exists():
             raise RuntimeError(
-                f"LoRaDB template not found at {cls.LORADB_TEMPLATE}. "
-                "Please ensure LoRaDB directory exists."
+                f"Template docker-compose.yml not found at {cls.TEMPLATE_DOCKER_COMPOSE}. "
+                "Please ensure docker-compose.yml exists in the root directory."
+            )
+
+        if not cls.TEMPLATE_ENV_EXAMPLE.exists():
+            raise RuntimeError(
+                f"Template .env.example not found at {cls.TEMPLATE_ENV_EXAMPLE}. "
+                "Please ensure .env.example exists in the root directory."
             )
 
         # Test Docker connection

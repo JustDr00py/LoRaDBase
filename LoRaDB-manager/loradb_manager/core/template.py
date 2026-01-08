@@ -11,27 +11,35 @@ class TemplateManager:
     """Manages template copying and .env generation for new instances."""
 
     def __init__(self):
-        """Initialize template manager with configured template paths."""
-        self.loradb_template = Config.LORADB_TEMPLATE
+        """Initialize template manager."""
+        # Template paths are now accessed via Config.TEMPLATE_* constants
+        pass
 
-    def copy_loradb_template(self, dest: Path):
+    def copy_template_files(self, dest: Path):
         """
-        Copy LoRaDB template to destination directory.
+        Copy minimal template files to destination.
+
+        Uses pre-built Docker images, so we only need configuration files.
 
         Args:
             dest: Destination directory path
 
         Raises:
-            IOError: If template copy fails
+            IOError: If template files don't exist or copy fails
         """
-        shutil.copytree(
-            self.loradb_template,
-            dest,
-            ignore=shutil.ignore_patterns(
-                '.git', '.env', 'target', 'node_modules', '__pycache__',
-                '*.pyc', '.gitignore', '.dockerignore'
-            )
-        )
+        dest.mkdir(parents=True, exist_ok=True)
+
+        # Copy docker-compose.yml
+        docker_compose_src = Config.TEMPLATE_DOCKER_COMPOSE
+        if not docker_compose_src.exists():
+            raise IOError(f"Template docker-compose.yml not found at {docker_compose_src}")
+        shutil.copy2(docker_compose_src, dest / "docker-compose.yml")
+
+        # Copy .env.example (used as template for .env generation)
+        env_example_src = Config.TEMPLATE_ENV_EXAMPLE
+        if not env_example_src.exists():
+            raise IOError(f"Template .env.example not found at {env_example_src}")
+        shutil.copy2(env_example_src, dest / ".env.example")
 
     def generate_loradb_env(
         self,
@@ -52,7 +60,7 @@ class TemplateManager:
             tls_key_path: Optional TLS key path
         """
         # Read template from .env.example
-        template_path = self.loradb_template / ".env.example"
+        template_path = Config.TEMPLATE_ENV_EXAMPLE
         if not template_path.exists():
             # Create a basic template if .env.example doesn't exist
             config = self._generate_default_loradb_env(port, jwt_secret, tls_cert_path, tls_key_path)

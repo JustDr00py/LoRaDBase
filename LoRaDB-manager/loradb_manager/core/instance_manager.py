@@ -131,7 +131,7 @@ class InstanceManager:
 
         try:
             # Copy templates
-            self.template_manager.copy_loradb_template(loradb_dir)
+            self.template_manager.copy_template_files(loradb_dir)
 
             # Generate network and volume names
             network = NetworkConfig(
@@ -369,6 +369,27 @@ class InstanceManager:
             raise ValueError(f"Instance '{instance_id}' not found")
 
         self.docker_manager.rebuild_instance(metadata)
+        metadata.status = InstanceStatus.RUNNING
+        metadata.updated_at = datetime.now()
+        self._save_metadata(metadata)
+
+    def update_instance(self, instance_id: str):
+        """
+        Update instance to use latest Docker image.
+
+        Pulls latest image from ghcr.io and restarts the instance.
+
+        Args:
+            instance_id: Instance to update
+
+        Raises:
+            ValueError: If instance not found
+        """
+        metadata = self.instances.get(instance_id)
+        if not metadata:
+            raise ValueError(f"Instance '{instance_id}' not found")
+
+        self.docker_manager.update_instance(metadata)
         metadata.status = InstanceStatus.RUNNING
         metadata.updated_at = datetime.now()
         self._save_metadata(metadata)

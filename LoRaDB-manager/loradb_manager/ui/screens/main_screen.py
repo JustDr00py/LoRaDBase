@@ -22,7 +22,7 @@ class MainScreen(Screen):
         Binding("l", "view_logs", "Logs", show=True),
         Binding("e", "edit_config", "Edit", show=True),
         Binding("d", "delete_instance", "Delete", show=True),
-        Binding("b", "rebuild_instance", "Rebuild", show=False),
+        Binding("u", "update_instance", "Update", show=False),
         Binding("enter", "select_instance", "Details", show=False),
     ]
 
@@ -54,7 +54,7 @@ class MainScreen(Screen):
             Button("Start", id="btn-start", variant="success"),
             Button("Stop", id="btn-stop", variant="warning"),
             Button("Restart", id="btn-restart"),
-            Button("Rebuild", id="btn-rebuild"),
+            Button("Update", id="btn-update"),
             Button("API Tokens", id="btn-tokens", variant="primary"),
             Button("Logs", id="btn-logs", variant="primary"),
             Button("Edit Config", id="btn-config"),
@@ -164,8 +164,8 @@ class MainScreen(Screen):
             self.action_stop_instance()
         elif event.button.id == "btn-restart":
             self.action_restart_instance()
-        elif event.button.id == "btn-rebuild":
-            self.action_rebuild_instance()
+        elif event.button.id == "btn-update":
+            self.action_update_instance()
         elif event.button.id == "btn-tokens":
             self.action_manage_tokens()
         elif event.button.id == "btn-logs":
@@ -235,25 +235,25 @@ class MainScreen(Screen):
         except Exception as e:
             self.app.notify(f"Failed to restart instance: {e}", severity="error")
 
-    def action_rebuild_instance(self):
-        """Rebuild selected instance (stops, rebuilds Docker images, starts)."""
+    def action_update_instance(self):
+        """Update selected instance to latest Docker image."""
         if not self.selected_instance_id:
             self.app.notify("Please select an instance first", severity="warning")
             return
 
-        self.app.notify(f"Rebuilding instance {self.selected_instance_id} in background...", severity="information")
-        self.run_worker(self._rebuild_instance_worker(self.selected_instance_id), exclusive=False)
+        self.app.notify(f"Updating instance {self.selected_instance_id} to latest image...", severity="information")
+        self.run_worker(self._update_instance_worker(self.selected_instance_id), exclusive=False)
 
-    async def _rebuild_instance_worker(self, instance_id: str):
-        """Background worker to rebuild instance."""
+    async def _update_instance_worker(self, instance_id: str):
+        """Background worker to update instance."""
         import asyncio
         try:
             # Run blocking operation in thread pool
-            await asyncio.to_thread(self.instance_manager.rebuild_instance, instance_id)
-            self.app.notify(f"Instance {instance_id} rebuilt successfully", severity="information")
+            await asyncio.to_thread(self.instance_manager.update_instance, instance_id)
+            self.app.notify(f"Instance {instance_id} updated successfully", severity="information")
             self.refresh_instances()
         except Exception as e:
-            self.app.notify(f"Failed to rebuild instance: {e}", severity="error")
+            self.app.notify(f"Failed to update instance: {e}", severity="error")
 
     def action_view_logs(self):
         """View instance logs."""
