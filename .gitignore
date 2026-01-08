@@ -22,7 +22,7 @@
 /LoRaDB/benches/target/
 **/target/
 **/*.rs.bk
-Cargo.lock
+#Cargo.lock
 
 # Rust debug files
 *.pdb
