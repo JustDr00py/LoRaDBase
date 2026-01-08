@@ -1,0 +1,73 @@
+version: '3.8'
+
+# Example using pre-built Docker images from GitHub Container Registry
+# No building required - images are pulled from ghcr.io
+#
+# Usage:
+#   docker compose -f docker-compose.prebuilt.yml up -d
+#
+# Update to latest image:
+#   docker compose -f docker-compose.prebuilt.yml pull
+#   docker compose -f docker-compose.prebuilt.yml up -d
+
+services:
+  loradb:
+    # Use pre-built image instead of building locally
+    # Replace 'YOUR_GITHUB_USERNAME' with the actual GitHub username/org
+    image: ghcr.io/JustDr00py/loradb:latest
+    container_name: loradb
+    restart: unless-stopped
+
+    # Environment configuration
+    env_file:
+      - .env
+
+    # Ports
+    ports:
+      - "${LORADB_API_PORT:-8443}:8443"
+
+    # Volumes
+    volumes:
+      # Data persistence
+      - loradb-data:/var/lib/loradb/data:rw
+
+      # TLS certificates (mount from host)
+      - ${LORADB_TLS_CERT_PATH}:/etc/loradb/cert.pem:ro
+      - ${LORADB_TLS_KEY_PATH}:/etc/loradb/key.pem:ro
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-k", "https://localhost:8443/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+    # Network
+    networks:
+      - loradb-network
+
+volumes:
+  loradb-data:
+    driver: local
+
+networks:
+  loradb-network:
+    driver: bridge

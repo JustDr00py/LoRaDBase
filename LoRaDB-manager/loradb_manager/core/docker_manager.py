@@ -28,13 +28,13 @@ class DockerManager:
 
     def start_instance(self, metadata: InstanceMetadata):
         """
-        Start instance using docker-compose up -d.
+        Start instance using docker compose up -d.
 
         Args:
             metadata: Instance metadata
 
         Raises:
-            RuntimeError: If docker-compose command fails
+            RuntimeError: If docker compose command fails
         """
         loradb_compose = Path(metadata.loradb_dir) / "docker-compose.yml"
 
@@ -71,13 +71,13 @@ class DockerManager:
 
     def stop_instance(self, metadata: InstanceMetadata):
         """
-        Stop instance using docker-compose down.
+        Stop instance using docker compose down.
 
         Args:
             metadata: Instance metadata
 
         Raises:
-            RuntimeError: If docker-compose command fails
+            RuntimeError: If docker compose command fails
         """
         # First, force-stop any containers in bad states (restarting, stuck, etc.)
         # This ensures we can stop containers that are in crash loops
@@ -120,7 +120,7 @@ class DockerManager:
             metadata: Instance metadata
 
         Raises:
-            RuntimeError: If docker-compose command fails
+            RuntimeError: If docker compose command fails
         """
         # Use the new update method
         self.update_instance(metadata)
@@ -135,7 +135,7 @@ class DockerManager:
             metadata: Instance metadata
 
         Raises:
-            RuntimeError: If docker-compose command fails
+            RuntimeError: If docker compose command fails
         """
         loradb_compose = Path(metadata.loradb_dir) / "docker-compose.yml"
 
