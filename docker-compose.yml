@@ -14,7 +14,7 @@ services:
   loradb:
     # Use pre-built image instead of building locally
     # Replace 'YOUR_GITHUB_USERNAME' with the actual GitHub username/org
-    image: ghcr.io/JustDr00py/loradb:latest
+    image: ghcr.io/justdr00py/loradb:latest
     container_name: loradb
     restart: unless-stopped
 
