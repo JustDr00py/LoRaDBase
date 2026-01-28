@@ -16,10 +16,10 @@ export type ThresholdOperator = '<' | '<=' | '>' | '>=' | '=' | 'between';
 
 // Threshold definition for current value widgets
 export interface Threshold {
-  operator: ThresholdOperator;
+  operator?: ThresholdOperator;  // Optional for backward compatibility with min/max format
   value?: number;        // For <, <=, >, >=, = operators
-  min?: number;          // For 'between' operator
-  max?: number;          // For 'between' operator
+  min?: number;          // For 'between' operator or legacy min/max format
+  max?: number;          // For 'between' operator or legacy min/max format
   color: string;
   label: string;         // Default label (e.g., "Low", "Normal", "High")
   customLabel?: string;  // Optional custom label to override default
@@ -165,6 +165,11 @@ export interface WidgetInstance {
       displayTypes?: WidgetType[]; // Override which visualizations to show
       customYAxisMin?: number;    // Per-measurement Y-axis minimum
       customYAxisMax?: number;    // Per-measurement Y-axis maximum
+      customTitle?: string;       // Override measurement title/name
+      customUnit?: string;        // Override measurement unit (e.g., "% RH" instead of "%")
+      hideBorder?: boolean;       // Hide the border around this measurement widget
+      showThresholdLabels?: boolean; // Show threshold labels for current-value widgets
+      customFormula?: string;     // Mathematical formula to transform value (e.g., "value * 1.8 + 32")
       // Widget-specific customizations
       customColor?: string;       // Override color for time-series and gauge
       customThresholds?: Threshold[]; // Override thresholds for current-value
@@ -174,8 +179,12 @@ export interface WidgetInstance {
   };
   sectionOrder?: string[];        // Custom order of measurement IDs (optional)
 
-  // NEW: Inner grid layout for draggable measurements
-  innerLayout?: Layout[];         // React-grid-layout positions for inner widgets
+  // NEW: Inner grid layout for draggable measurements (responsive)
+  innerLayout?: {
+    lg: Layout[];
+    md?: Layout[];
+    sm?: Layout[];
+  };
   innerLayoutLocked?: boolean;    // Lock/unlock edit mode default state
 
   // Shared fields

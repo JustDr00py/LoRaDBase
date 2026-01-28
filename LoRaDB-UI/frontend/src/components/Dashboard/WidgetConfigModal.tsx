@@ -32,6 +32,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({
       displayTypes?: WidgetType[];
       customYAxisMin?: number;
       customYAxisMax?: number;
+      customFormula?: string;
     };
   }>({});
   const [sectionOrder, setSectionOrder] = useState<string[]>([]);
@@ -41,6 +42,9 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({
   const [customYAxisMax, setCustomYAxisMax] = useState<string>('');
   const [sectionYAxis, setSectionYAxis] = useState<{
     [measurementId: string]: { min?: string; max?: string };
+  }>({});
+  const [sectionFormula, setSectionFormula] = useState<{
+    [measurementId: string]: string;
   }>({});
   const [advancedSettingsExpanded, setAdvancedSettingsExpanded] = useState(false);
   const [thresholds, setThresholds] = useState<Threshold[]>([]);
@@ -69,6 +73,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({
       setCustomYAxisMin('');
       setCustomYAxisMax('');
       setSectionYAxis({});
+      setSectionFormula({});
       setThresholds([]);
     } else if (editWidget) {
       // Populate fields when editing
@@ -85,6 +90,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({
         // Initialize sectionYAxis from sectionOverrides
         if (editWidget.sectionOverrides) {
           const yAxisValues: { [measurementId: string]: { min?: string; max?: string } } = {};
+          const formulaValues: { [measurementId: string]: string } = {};
           Object.entries(editWidget.sectionOverrides).forEach(([mId, override]) => {
             if (override.customYAxisMin !== undefined || override.customYAxisMax !== undefined) {
               yAxisValues[mId] = {
@@ -92,8 +98,12 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({
                 max: override.customYAxisMax?.toString() || '',
               };
             }
+            if (override.customFormula) {
+              formulaValues[mId] = override.customFormula;
+            }
           });
           setSectionYAxis(yAxisValues);
+          setSectionFormula(formulaValues);
         }
       } else {
         setWidgetMode('individual');
@@ -203,7 +213,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({
         return;
       }
 
-      // Build final sectionOverrides with Y-axis values
+      // Build final sectionOverrides with Y-axis values and formulas
       const finalSectionOverrides = { ...sectionOverrides };
 
       Object.entries(sectionYAxis).forEach(([mId, yAxis]) => {
@@ -217,6 +227,16 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({
           if (yAxis.max !== '') {
             finalSectionOverrides[mId].customYAxisMax = Number(yAxis.max);
           }
+        }
+      });
+
+      // Add formulas to sectionOverrides
+      Object.entries(sectionFormula).forEach(([mId, formula]) => {
+        if (formula && formula.trim() !== '') {
+          if (!finalSectionOverrides[mId]) {
+            finalSectionOverrides[mId] = {};
+          }
+          finalSectionOverrides[mId].customFormula = formula.trim();
         }
       });
 
@@ -480,6 +500,28 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({
                             }
                           )}
                         </div>
+
+                        {/* Formula Field */}
+                        {measurement.valueType !== 'string' && (
+                          <div className="section-formula-control">
+                            <label>Formula (optional):</label>
+                            <input
+                              type="text"
+                              placeholder="e.g., value * 1.8 + 32"
+                              value={sectionFormula[mId] || ''}
+                              onChange={(e) => {
+                                setSectionFormula({
+                                  ...sectionFormula,
+                                  [mId]: e.target.value,
+                                });
+                              }}
+                              className="form-control"
+                            />
+                            <p className="form-help">
+                              Transform values using a formula. Use "value" as the variable.
+                            </p>
+                          </div>
+                        )}
 
                         {/* Y-Axis Range Controls */}
                         {displayTypes.includes('time-series') && (

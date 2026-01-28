@@ -324,6 +324,11 @@ export interface ImportResult {
     skipped: number;
     errors: string[];
   };
+  dashboards: {
+    imported: number;
+    skipped: number;
+    errors: string[];
+  };
   deviceTypes: {
     imported: number;
     skipped: number;
@@ -347,4 +352,56 @@ export interface ExportBackupRequest {
 export interface ImportBackupRequest {
   backup: BackupData;
   strategy: ImportStrategy;
+}
+
+// Dashboard Management
+export interface DashboardResponse {
+  id: number;
+  serverId: number;
+  name: string;
+  isDefault: boolean;
+  version: string;
+  timeRange: string;
+  autoRefresh: boolean;
+  refreshInterval: number;
+  widgets: any[];
+  layouts: {
+    lg: any[];
+    md?: any[];
+    sm?: any[];
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDashboardRequest {
+  // serverId is set automatically by backend from authentication
+  name?: string;
+  version: string;
+  timeRange: string;
+  autoRefresh: boolean;
+  refreshInterval: number;
+  widgets: any[];
+  layouts: {
+    lg: any[];
+    md?: any[];
+    sm?: any[];
+  };
+}
+
+export interface UpdateDashboardRequest {
+  name?: string;
+  timeRange?: string;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+  widgets?: any[];
+  layouts?: {
+    lg: any[];
+    md?: any[];
+    sm?: any[];
+  };
+}
+
+export interface MigrateDashboardRequest {
+  dashboard: any; // localStorage dashboard data
 }

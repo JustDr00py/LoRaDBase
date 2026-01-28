@@ -1,5 +1,16 @@
-import React from 'react';
-import ReactECharts from 'echarts-for-react';
+import React, { useState } from 'react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+  Brush,
+} from 'recharts';
 import type { WidgetData, TimeSeriesWidgetConfig, MeasurementDefinition, WidgetInstance } from '../../../types/widgets';
 import { formatDate } from '../../../utils/dateFormatter';
 import { getConvertedYAxisRange } from '../../../utils/widgetDataProcessor';
@@ -22,6 +33,9 @@ export const TimeSeriesWidget: React.FC<TimeSeriesWidgetProps> = ({
   widget,
   yAxisOverride,
 }) => {
+  // State for zoom/brush control
+  const [brushIndexes, setBrushIndexes] = useState<{ startIndex?: number; endIndex?: number }>({});
+
   if (data.error) {
     return <div className="widget-error">{data.error}</div>;
   }
@@ -69,73 +83,135 @@ export const TimeSeriesWidget: React.FC<TimeSeriesWidgetProps> = ({
     yAxisMax = widget.customYAxisMax;
   }
 
-  const option = {
-    grid: {
-      left: 50,
-      right: 15,
-      top: 15,
-      bottom: 30,
-      containLabel: true,
-    },
-    xAxis: {
-      type: 'time',
-      axisLabel: {
-        fontSize: 10,
-        formatter: (value: number) => {
-          const date = new Date(value);
-          return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        },
-      },
-    },
-    yAxis: {
-      type: 'value',
-      name: displayUnit,
-      nameTextStyle: {
-        fontSize: 11,
-      },
-      min: yAxisMin,
-      max: yAxisMax,
-      axisLabel: {
-        fontSize: 10,
-        formatter: (value: number) => value.toFixed(displayDecimals),
-      },
-    },
-    series: [
-      {
-        type: 'line',
-        data: data.timeSeries.map((d) => [new Date(d.timestamp).getTime(), d.value]),
-        smooth: true,
-        areaStyle: config.showArea ? { opacity: 0.3 } : undefined,
-        itemStyle: {
-          color: config.color || '#2563eb',
-        },
-        lineStyle: {
-          width: 2,
-        },
-        showSymbol: false,
-      },
-    ],
-    tooltip: {
-      trigger: 'axis',
-      textStyle: {
-        fontSize: 12,
-      },
-      formatter: (params: any) => {
-        const point = params[0];
-        const value = point.value[1].toFixed(displayDecimals);
-        const time = formatDate(new Date(point.value[0]).toISOString());
-        return `<strong>${value} ${displayUnit}</strong><br/>${time}`;
-      },
-    },
+  // Format data for Recharts
+  const chartData = data.timeSeries.map((point) => ({
+    timestamp: new Date(point.timestamp).getTime(),
+    value: point.value,
+  }));
+
+  const lineColor = config.color || '#2563eb';
+
+  const formatXAxis = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
+
+  const formatTooltip = (value: number) => {
+    if (typeof value === 'number') {
+      return `${value.toFixed(displayDecimals)} ${displayUnit}`;
+    }
+    return value;
+  };
+
+  const formatTooltipLabel = (timestamp: number) => {
+    return formatDate(new Date(timestamp).toISOString());
+  };
+
+  const handleBrushChange = (brushData: { startIndex?: number; endIndex?: number }) => {
+    setBrushIndexes(brushData);
+  };
+
+  const handleResetZoom = () => {
+    setBrushIndexes({});
+  };
+
+  const isZoomed = brushIndexes.startIndex !== undefined || brushIndexes.endIndex !== undefined;
+
+  // Filter chart data based on brush selection
+  const visibleData = isZoomed && brushIndexes.startIndex !== undefined && brushIndexes.endIndex !== undefined
+    ? chartData.slice(brushIndexes.startIndex, brushIndexes.endIndex + 1)
+    : chartData;
+
+  const ChartComponent = config.showArea ? AreaChart : LineChart;
 
   return (
     <div className="time-series-widget">
-      <ReactECharts
-        option={option}
-        style={{ height: '100%', width: '100%' }}
-        opts={{ renderer: 'canvas' }}
-      />
+      <div className="widget-title">
+        {measurement.name}
+        {isZoomed && (
+          <button
+            onClick={handleResetZoom}
+            className="reset-zoom-btn"
+            title="Reset zoom"
+            style={{
+              marginLeft: '10px',
+              padding: '2px 8px',
+              fontSize: '11px',
+              background: '#f3f4f6',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              color: '#374151',
+            }}
+          >
+            Reset Zoom
+          </button>
+        )}
+      </div>
+      <div className="chart-container">
+        <ResponsiveContainer width="100%" height="100%">
+          <ChartComponent data={visibleData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis
+              dataKey="timestamp"
+              type="number"
+              domain={['dataMin', 'dataMax']}
+              tickFormatter={formatXAxis}
+              stroke="#666"
+              style={{ fontSize: '10px' }}
+            />
+            <YAxis
+              domain={[yAxisMin ?? 'auto', yAxisMax ?? 'auto']}
+              label={{ value: displayUnit, angle: -90, position: 'insideLeft', style: { fontSize: '11px' } }}
+              tickFormatter={(value) => value.toFixed(displayDecimals)}
+              stroke="#666"
+              style={{ fontSize: '10px' }}
+            />
+            <Tooltip
+              formatter={formatTooltip}
+              labelFormatter={formatTooltipLabel}
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            />
+            {config.showArea ? (
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={lineColor}
+                fill={lineColor}
+                fillOpacity={0.3}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 5 }}
+              />
+            ) : (
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={lineColor}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 5 }}
+              />
+            )}
+            <Brush
+              dataKey="timestamp"
+              height={30}
+              stroke={lineColor}
+              fill="#f9fafb"
+              tickFormatter={formatXAxis}
+              onChange={handleBrushChange}
+              startIndex={brushIndexes.startIndex}
+              endIndex={brushIndexes.endIndex}
+              data={chartData}
+            />
+          </ChartComponent>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

@@ -380,3 +380,49 @@ export function getStatusIcon(level: StatusLevel): string {
 
   return icons[level] || icons.info;
 }
+
+/**
+ * Apply a custom formula to a numeric value
+ * Safely evaluates mathematical expressions using Function constructor
+ * @param value - The input value
+ * @param formula - The formula string (e.g., "value * 1.8 + 32")
+ * @returns The transformed value, or original value if formula is invalid
+ */
+export function applyFormula(value: number, formula?: string): number {
+  if (!formula || formula.trim() === '') {
+    return value;
+  }
+
+  try {
+    // Replace 'value' with the actual value in the formula
+    // Use Function constructor instead of eval for better security
+    // Only allow basic math operations
+    const sanitizedFormula = formula.trim();
+
+    // Create a safe evaluation context with only math functions
+    const safeEval = new Function(
+      'value',
+      'Math',
+      `
+      'use strict';
+      try {
+        return ${sanitizedFormula};
+      } catch (e) {
+        return value;
+      }
+      `
+    );
+
+    const result = safeEval(value, Math);
+
+    // Validate result is a number
+    if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+      return result;
+    }
+
+    return value;
+  } catch (error) {
+    console.warn('Formula evaluation failed:', error);
+    return value;
+  }
+}

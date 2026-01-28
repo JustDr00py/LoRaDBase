@@ -1,5 +1,8 @@
 version: '3.8'
 
+# Production docker-compose file using pre-built images from GitHub Container Registry
+# Usage: docker compose -f docker-compose.ghcr.yml up -d
+
 services:
   backend:
     build:
@@ -19,6 +22,17 @@ services:
       - BACKUP_ENABLED=${BACKUP_ENABLED:-true}
       - BACKUP_SCHEDULE=${BACKUP_SCHEDULE:-0 2 * * *}
       - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-7}
+      # Rate Limiting Configuration
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-300}
+      - AUTH_RATE_LIMIT_WINDOW_MS=${AUTH_RATE_LIMIT_WINDOW_MS:-900000}
+      - AUTH_RATE_LIMIT_MAX=${AUTH_RATE_LIMIT_MAX:-10}
+      - SERVER_CREATION_RATE_LIMIT_WINDOW_MS=${SERVER_CREATION_RATE_LIMIT_WINDOW_MS:-3600000}
+      - SERVER_CREATION_RATE_LIMIT_MAX=${SERVER_CREATION_RATE_LIMIT_MAX:-10}
+      - SERVER_DELETION_RATE_LIMIT_WINDOW_MS=${SERVER_DELETION_RATE_LIMIT_WINDOW_MS:-900000}
+      - SERVER_DELETION_RATE_LIMIT_MAX=${SERVER_DELETION_RATE_LIMIT_MAX:-20}
+      - MASTER_PASSWORD_RATE_LIMIT_WINDOW_MS=${MASTER_PASSWORD_RATE_LIMIT_WINDOW_MS:-900000}
+      - MASTER_PASSWORD_RATE_LIMIT_MAX=${MASTER_PASSWORD_RATE_LIMIT_MAX:-5}
     volumes:
       - loradb-ui-data:/app/data
     ports:
@@ -41,7 +55,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
     container_name: loradb-ui-frontend
     restart: unless-stopped
     volumes:
@@ -53,7 +67,7 @@ services:
     networks:
       - loradb-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000"]
       interval: 30s
       timeout: 3s
       retries: 3

@@ -31,19 +31,12 @@ export const StatusWidget: React.FC<StatusWidgetProps> = ({ data, measurement })
         <span className="status-icon">{icon}</span>
         <span className="status-label">{data.status.label}</span>
       </div>
-      <div className="status-value">
-        {valueType === 'string' && typeof data.currentValue === 'string' ? (
-          // String: display as-is
-          data.currentValue
-        ) : typeof data.currentValue === 'number' && displayDecimals !== undefined ? (
-          // Numeric: format with decimals and unit
-          <>
-            {data.currentValue.toFixed(displayDecimals)} {displayUnit}
-          </>
-        ) : (
-          '-'
-        )}
-      </div>
+      {/* Only show value for numeric types (e.g., "23.5 °C") - for strings, the badge label is sufficient */}
+      {valueType === 'number' && typeof data.currentValue === 'number' && displayDecimals !== undefined && (
+        <div className="status-value">
+          {data.currentValue.toFixed(displayDecimals)} {displayUnit}
+        </div>
+      )}
     </div>
   );
 };

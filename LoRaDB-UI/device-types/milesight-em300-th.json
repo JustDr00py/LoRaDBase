@@ -1,0 +1,180 @@
+{
+  "deviceType": "milesight-em300-th",
+  "name": "Milesight EM300-TH",
+  "manufacturer": "Milesight",
+  "description": "LoRaWAN Temperature and Humidity Sensor with long battery life",
+  "version": "1.0.0",
+  "measurements": [
+    {
+      "id": "temperature",
+      "path": "decoded_payload.object.temperature",
+      "name": "Temperature",
+      "unit": "°C",
+      "decimals": 1,
+      "defaultWidget": "time-series",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": -40, "max": 0, "color": "#3b82f6", "label": "Freezing" },
+            { "min": 0, "max": 10, "color": "#06b6d4", "label": "Cold" },
+            { "min": 10, "max": 20, "color": "#10b981", "label": "Cool" },
+            { "min": 20, "max": 25, "color": "#84cc16", "label": "Comfortable" },
+            { "min": 25, "max": 30, "color": "#f59e0b", "label": "Warm" },
+            { "min": 30, "max": 60, "color": "#ef4444", "label": "Hot" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": -10,
+          "yAxisMax": 40,
+          "showArea": true,
+          "color": "#2563eb"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": -10,
+          "max": 40,
+          "zones": [
+            { "from": -10, "to": 0, "color": "#3b82f6" },
+            { "from": 0, "to": 10, "color": "#06b6d4" },
+            { "from": 10, "to": 20, "color": "#10b981" },
+            { "from": 20, "to": 25, "color": "#84cc16" },
+            { "from": 25, "to": 30, "color": "#f59e0b" },
+            { "from": 30, "to": 40, "color": "#ef4444" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 0, "status": "info", "label": "Freezing" },
+            { "operator": "between", "min": 0, "max": 10, "status": "info", "label": "Cold" },
+            { "operator": "between", "min": 10, "max": 20, "status": "success", "label": "Cool" },
+            { "operator": "between", "min": 20, "max": 25, "status": "success", "label": "Comfortable" },
+            { "operator": "between", "min": 25, "max": 30, "status": "warning", "label": "Warm" },
+            { "operator": "gt", "value": 30, "status": "error", "label": "Hot" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "humidity",
+      "path": "decoded_payload.object.humidity",
+      "name": "Humidity",
+      "unit": "%",
+      "decimals": 1,
+      "defaultWidget": "time-series",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 30, "color": "#f59e0b", "label": "Dry" },
+            { "min": 30, "max": 40, "color": "#84cc16", "label": "Good" },
+            { "min": 40, "max": 60, "color": "#10b981", "label": "Comfortable" },
+            { "min": 60, "max": 70, "color": "#84cc16", "label": "Humid" },
+            { "min": 70, "max": 100, "color": "#ef4444", "label": "Very Humid" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 100,
+          "showArea": true,
+          "color": "#06b6d4"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 100,
+          "zones": [
+            { "from": 0, "to": 30, "color": "#f59e0b" },
+            { "from": 30, "to": 40, "color": "#84cc16" },
+            { "from": 40, "to": 60, "color": "#10b981" },
+            { "from": 60, "to": 70, "color": "#84cc16" },
+            { "from": 70, "to": 100, "color": "#ef4444" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 30, "status": "warning", "label": "Too Dry" },
+            { "operator": "between", "min": 30, "max": 40, "status": "success", "label": "Good" },
+            { "operator": "between", "min": 40, "max": 60, "status": "success", "label": "Comfortable" },
+            { "operator": "between", "min": 60, "max": 70, "status": "info", "label": "Humid" },
+            { "operator": "gt", "value": 70, "status": "warning", "label": "Very Humid" }
+          ]
+        }
+      }
+    }
+  ],
+  "widgetTemplates": [
+    {
+      "id": "overview",
+      "name": "Temperature & Humidity Overview",
+      "description": "Current temperature and humidity readings",
+      "layout": "vertical",
+      "defaultSize": { "w": 4, "h": 4 },
+      "sections": [
+        {
+          "measurementId": "temperature",
+          "displayTypes": ["current-value"]
+        },
+        {
+          "measurementId": "humidity",
+          "displayTypes": ["current-value"]
+        }
+      ]
+    },
+    {
+      "id": "detailed",
+      "name": "Detailed Climate View",
+      "description": "Temperature and humidity with trends",
+      "layout": "grid",
+      "defaultSize": { "w": 6, "h": 5 },
+      "sections": [
+        {
+          "measurementId": "temperature",
+          "displayTypes": ["current-value", "time-series"]
+        },
+        {
+          "measurementId": "humidity",
+          "displayTypes": ["current-value", "time-series"]
+        }
+      ]
+    },
+    {
+      "id": "gauges",
+      "name": "Gauge View",
+      "description": "Temperature and humidity as gauges",
+      "layout": "horizontal",
+      "defaultSize": { "w": 6, "h": 4 },
+      "sections": [
+        {
+          "measurementId": "temperature",
+          "displayTypes": ["gauge"]
+        },
+        {
+          "measurementId": "humidity",
+          "displayTypes": ["gauge"]
+        }
+      ]
+    },
+    {
+      "id": "compact",
+      "name": "Compact Status",
+      "description": "Minimal view with status indicators",
+      "layout": "vertical",
+      "defaultSize": { "w": 3, "h": 3 },
+      "sections": [
+        {
+          "measurementId": "temperature",
+          "displayTypes": ["status"]
+        },
+        {
+          "measurementId": "humidity",
+          "displayTypes": ["status"]
+        }
+      ]
+    }
+  ]
+}

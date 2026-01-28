@@ -1,0 +1,623 @@
+{
+  "deviceType": "dragino-lt-22222-l",
+  "name": "Dragino LT-22222-L",
+  "manufacturer": "Dragino",
+  "description": "Industrial I/O Controller with 2x Analog Current Inputs, 2x Analog Voltage Inputs, 2x Digital Inputs, 2x Digital Outputs, and 2x Relay Outputs",
+  "version": "1.0.0",
+  "measurements": [
+    {
+      "id": "aci1_ma",
+      "path": "decoded_payload.object.ACI1_mA",
+      "name": "Analog Current Input 1",
+      "unit": "mA",
+      "decimals": 3,
+      "valueType": "number",
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 4, "color": "#ef4444", "label": "Below Range" },
+            { "min": 4, "max": 20, "color": "#10b981", "label": "Normal" },
+            { "min": 20, "max": 100, "color": "#f59e0b", "label": "Above Range" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 25,
+          "showArea": false,
+          "color": "#3b82f6"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 25,
+          "zones": [
+            { "from": 0, "to": 4, "color": "#ef4444" },
+            { "from": 4, "to": 20, "color": "#10b981" },
+            { "from": 20, "to": 25, "color": "#f59e0b" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "number", "operator": "lt", "value": 4, "status": "error", "label": "Below Range" },
+            { "valueType": "number", "operator": "between", "min": 4, "max": 20, "status": "success", "label": "Normal" },
+            { "valueType": "number", "operator": "gte", "value": 20, "status": "warning", "label": "Above Range" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "aci2_ma",
+      "path": "decoded_payload.object.ACI2_mA",
+      "name": "Analog Current Input 2",
+      "unit": "mA",
+      "decimals": 3,
+      "valueType": "number",
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 4, "color": "#ef4444", "label": "Below Range" },
+            { "min": 4, "max": 20, "color": "#10b981", "label": "Normal" },
+            { "min": 20, "max": 100, "color": "#f59e0b", "label": "Above Range" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 25,
+          "showArea": false,
+          "color": "#8b5cf6"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 25,
+          "zones": [
+            { "from": 0, "to": 4, "color": "#ef4444" },
+            { "from": 4, "to": 20, "color": "#10b981" },
+            { "from": 20, "to": 25, "color": "#f59e0b" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "number", "operator": "lt", "value": 4, "status": "error", "label": "Below Range" },
+            { "valueType": "number", "operator": "between", "min": 4, "max": 20, "status": "success", "label": "Normal" },
+            { "valueType": "number", "operator": "gte", "value": 20, "status": "warning", "label": "Above Range" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "avi1_v",
+      "path": "decoded_payload.object.AVI1_V",
+      "name": "Analog Voltage Input 1",
+      "unit": "V",
+      "decimals": 3,
+      "valueType": "number",
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 10, "color": "#10b981", "label": "Low" },
+            { "min": 10, "max": 30, "color": "#3b82f6", "label": "Normal" },
+            { "min": 30, "max": 50, "color": "#f59e0b", "label": "High" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 50,
+          "showArea": false,
+          "color": "#10b981"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 50,
+          "zones": [
+            { "from": 0, "to": 10, "color": "#10b981" },
+            { "from": 10, "to": 30, "color": "#3b82f6" },
+            { "from": 30, "to": 50, "color": "#f59e0b" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "number", "operator": "lt", "value": 10, "status": "success", "label": "Low" },
+            { "valueType": "number", "operator": "between", "min": 10, "max": 30, "status": "info", "label": "Normal" },
+            { "valueType": "number", "operator": "gte", "value": 30, "status": "warning", "label": "High" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "avi2_v",
+      "path": "decoded_payload.object.AVI2_V",
+      "name": "Analog Voltage Input 2",
+      "unit": "V",
+      "decimals": 3,
+      "valueType": "number",
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 3, "color": "#10b981", "label": "Low" },
+            { "min": 3, "max": 7, "color": "#3b82f6", "label": "Normal" },
+            { "min": 7, "max": 10, "color": "#f59e0b", "label": "High" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 10,
+          "showArea": false,
+          "color": "#06b6d4"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 10,
+          "zones": [
+            { "from": 0, "to": 3, "color": "#10b981" },
+            { "from": 3, "to": 7, "color": "#3b82f6" },
+            { "from": 7, "to": 10, "color": "#f59e0b" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "number", "operator": "lt", "value": 3, "status": "success", "label": "Low" },
+            { "valueType": "number", "operator": "between", "min": 3, "max": 7, "status": "info", "label": "Normal" },
+            { "valueType": "number", "operator": "gte", "value": 7, "status": "warning", "label": "High" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "di1_status",
+      "path": "decoded_payload.object.DI1_status",
+      "name": "Digital Input 1",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "status",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false,
+          "min": 0,
+          "max": 1
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "string", "operator": "eq", "value": "H", "status": "success", "label": "High" },
+            { "valueType": "string", "operator": "eq", "value": "L", "status": "info", "label": "Low" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "di2_status",
+      "path": "decoded_payload.object.DI2_status",
+      "name": "Digital Input 2",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "status",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false,
+          "min": 0,
+          "max": 1
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "string", "operator": "eq", "value": "H", "status": "success", "label": "High" },
+            { "valueType": "string", "operator": "eq", "value": "L", "status": "info", "label": "Low" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "do1_status",
+      "path": "decoded_payload.object.DO1_status",
+      "name": "Digital Output 1",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "status",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false,
+          "min": 0,
+          "max": 1
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "string", "operator": "eq", "value": "H", "status": "success", "label": "High" },
+            { "valueType": "string", "operator": "eq", "value": "L", "status": "info", "label": "Low" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "do2_status",
+      "path": "decoded_payload.object.DO2_status",
+      "name": "Digital Output 2",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "status",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false,
+          "min": 0,
+          "max": 1
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "string", "operator": "eq", "value": "H", "status": "success", "label": "High" },
+            { "valueType": "string", "operator": "eq", "value": "L", "status": "info", "label": "Low" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ro1_status",
+      "path": "decoded_payload.object.RO1_status",
+      "name": "Relay Output 1",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "status",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false,
+          "min": 0,
+          "max": 1
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "string", "operator": "eq", "value": "ON", "status": "success", "label": "Active" },
+            { "valueType": "string", "operator": "eq", "value": "OFF", "status": "info", "label": "Inactive" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ro2_status",
+      "path": "decoded_payload.object.RO2_status",
+      "name": "Relay Output 2",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "status",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false,
+          "min": 0,
+          "max": 1
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "string", "operator": "eq", "value": "ON", "status": "success", "label": "Active" },
+            { "valueType": "string", "operator": "eq", "value": "OFF", "status": "info", "label": "Inactive" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "hardware_mode",
+      "path": "decoded_payload.object.Hardware_mode",
+      "name": "Hardware Mode",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false,
+          "min": 0,
+          "max": 1
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "string", "operator": "eq", "value": "LT22222", "status": "info", "label": "LT-22222" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "work_mode",
+      "path": "decoded_payload.object.Work_mode",
+      "name": "Work Mode",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false,
+          "min": 0,
+          "max": 1
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "valueType": "string", "operator": "eq", "value": "2ACI+2AVI", "status": "info", "label": "2ACI+2AVI" },
+            { "valueType": "string", "operator": "eq", "value": "4ACI", "status": "info", "label": "4ACI" },
+            { "valueType": "string", "operator": "eq", "value": "4AVI", "status": "info", "label": "4AVI" }
+          ]
+        }
+      }
+    }
+  ],
+  "widgetTemplates": [
+    {
+      "id": "overview",
+      "name": "Overview",
+      "description": "Complete view of all inputs and outputs",
+      "layout": "grid",
+      "defaultSize": { "w": 12, "h": 14 },
+      "sections": [
+        {
+          "measurementId": "aci1_ma",
+          "displayTypes": ["current-value", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "aci2_ma",
+          "displayTypes": ["current-value", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "avi1_v",
+          "displayTypes": ["current-value", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "avi2_v",
+          "displayTypes": ["current-value", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "di1_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "di2_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "do1_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "do2_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "ro1_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "ro2_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "id": "analog-inputs",
+      "name": "Analog Inputs",
+      "description": "Detailed view of current and voltage inputs with trends",
+      "layout": "grid",
+      "defaultSize": { "w": 12, "h": 12 },
+      "sections": [
+        {
+          "measurementId": "aci1_ma",
+          "displayTypes": ["current-value", "time-series", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "aci2_ma",
+          "displayTypes": ["current-value", "time-series", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "avi1_v",
+          "displayTypes": ["current-value", "time-series", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "avi2_v",
+          "displayTypes": ["current-value", "time-series", "gauge"],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "id": "digital-io",
+      "name": "Digital I/O",
+      "description": "Status view of all digital inputs, outputs, and relays",
+      "layout": "grid",
+      "defaultSize": { "w": 8, "h": 6 },
+      "sections": [
+        {
+          "measurementId": "di1_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "di2_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "do1_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "do2_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "ro1_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "ro2_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "id": "current-inputs",
+      "name": "Current Inputs",
+      "description": "Focus on 4-20mA current loop inputs",
+      "layout": "grid",
+      "defaultSize": { "w": 12, "h": 8 },
+      "sections": [
+        {
+          "measurementId": "aci1_ma",
+          "displayTypes": ["current-value", "time-series", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "aci2_ma",
+          "displayTypes": ["current-value", "time-series", "gauge"],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "id": "voltage-inputs",
+      "name": "Voltage Inputs",
+      "description": "Focus on voltage input measurements",
+      "layout": "grid",
+      "defaultSize": { "w": 12, "h": 8 },
+      "sections": [
+        {
+          "measurementId": "avi1_v",
+          "displayTypes": ["current-value", "time-series", "gauge"],
+          "hidden": false
+        },
+        {
+          "measurementId": "avi2_v",
+          "displayTypes": ["current-value", "time-series", "gauge"],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "id": "compact",
+      "name": "Compact",
+      "description": "Minimal view showing current values only",
+      "layout": "grid",
+      "defaultSize": { "w": 8, "h": 6 },
+      "sections": [
+        {
+          "measurementId": "aci1_ma",
+          "displayTypes": ["current-value"],
+          "hidden": false
+        },
+        {
+          "measurementId": "aci2_ma",
+          "displayTypes": ["current-value"],
+          "hidden": false
+        },
+        {
+          "measurementId": "avi1_v",
+          "displayTypes": ["current-value"],
+          "hidden": false
+        },
+        {
+          "measurementId": "avi2_v",
+          "displayTypes": ["current-value"],
+          "hidden": false
+        },
+        {
+          "measurementId": "ro1_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        },
+        {
+          "measurementId": "ro2_status",
+          "displayTypes": ["status"],
+          "hidden": false
+        }
+      ]
+    }
+  ]
+}

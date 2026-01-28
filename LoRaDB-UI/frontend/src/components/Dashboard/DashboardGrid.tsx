@@ -1,21 +1,21 @@
 import React from 'react';
-import GridLayout, { Layout, WidthProvider } from 'react-grid-layout';
+import { Responsive as ResponsiveGridLayoutBase, Layout, WidthProvider, Layouts } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import type { WidgetInstance, MeasurementDefinition, DeviceTypeDefinition } from '../../types/widgets';
 import { WidgetContainer } from './WidgetContainer';
 
-const ResponsiveGridLayout = WidthProvider(GridLayout);
+const ResponsiveGridLayout = WidthProvider(ResponsiveGridLayoutBase);
 
 interface DashboardGridProps {
   widgets: WidgetInstance[];
-  layouts: { lg: Layout[] };
+  layouts: Layouts;
   timeRange: string;
   refreshInterval?: number;
-  onLayoutChange: (layout: Layout[]) => void;
+  onLayoutChange: (layout: Layout[], layouts: Layouts) => void;
   onDeleteWidget: (id: string) => void;
   onEditWidget: (widget: WidgetInstance) => void;
-  onUpdateInnerLayout?: (widgetId: string, newLayout: Layout[]) => void;
+  onUpdateInnerLayout?: (widgetId: string, newLayout: { lg: Layout[]; md?: Layout[]; sm?: Layout[] }) => void;
   onUpdateWidget?: (widgetId: string, updates: Partial<WidgetInstance>) => void;
   getMeasurement: (deviceType: string, measurementId: string) => MeasurementDefinition | undefined;
   getDeviceType: (deviceType: string) => DeviceTypeDefinition | undefined;
@@ -37,8 +37,9 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
   return (
     <ResponsiveGridLayout
       className="dashboard-grid"
-      layout={layouts.lg}
-      cols={12}
+      layouts={layouts}
+      breakpoints={{ lg: 1024, md: 640, sm: 0 }}
+      cols={{ lg: 12, md: 6, sm: 2 }}
       rowHeight={60}
       onLayoutChange={onLayoutChange}
       draggableHandle=".widget-header"

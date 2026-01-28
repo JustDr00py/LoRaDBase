@@ -96,7 +96,7 @@ export const DashboardPage: React.FC = () => {
     setEditingWidget(undefined);
   };
 
-  const handleUpdateInnerLayout = (widgetId: string, newLayout: Layout[]) => {
+  const handleUpdateInnerLayout = (widgetId: string, newLayout: { lg: Layout[]; md?: Layout[]; sm?: Layout[] }) => {
     updateWidget(widgetId, { innerLayout: newLayout });
   };
 

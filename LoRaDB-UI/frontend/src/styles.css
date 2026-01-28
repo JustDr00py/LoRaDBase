@@ -18,6 +18,36 @@
   --sidebar-bg: #1f2937;
   --sidebar-text: #d1d5db;
   --sidebar-hover: #374151;
+
+  /* Responsive Breakpoints */
+  --breakpoint-mobile: 639px;
+  --breakpoint-tablet: 640px;
+  --breakpoint-desktop: 1024px;
+
+  /* Sidebar Dimensions */
+  --sidebar-width-desktop: 250px;
+  --sidebar-width-tablet: 250px;
+  --sidebar-width-mobile: 280px;
+
+  /* FAB Button */
+  --fab-size: 56px;
+  --fab-bottom: 20px;
+  --fab-right: 20px;
+  --fab-z-index: 1001;
+
+  /* Spacing Scale */
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Touch Targets */
+  --min-touch-target: 44px;
+
+  /* Transitions */
+  --sidebar-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --backdrop-transition: opacity 0.3s ease-in-out;
 }
 
 body {
@@ -357,18 +387,359 @@ pre {
   word-wrap: break-word;
 }
 
+/* FAB Button (Floating Action Button) */
+.fab-button {
+  position: fixed;
+  bottom: var(--fab-bottom);
+  right: var(--fab-right);
+  width: var(--fab-size);
+  height: var(--fab-size);
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  z-index: var(--fab-z-index);
+  display: none; /* Hidden by default (desktop) */
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.fab-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
+  background: var(--primary-hover);
+}
+
+.fab-button:active {
+  transform: scale(0.95);
+}
+
+/* Sidebar Backdrop */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999; /* Below sidebar (1000) but above content */
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--backdrop-transition);
+}
+
+.sidebar-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* Responsive */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 200px;
+
+/* Mobile and Tablet: Show FAB, hide sidebar by default */
+@media (max-width: 1023px) {
+  /* Show FAB button on mobile/tablet */
+  .fab-button {
+    display: flex;
   }
 
+  /* Sidebar as overlay */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width-mobile);
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: var(--sidebar-transition);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Main content full width */
   .main-content {
-    margin-left: 200px;
-    width: calc(100% - 200px);
+    margin-left: 0;
+    width: 100%;
+    padding: var(--spacing-lg);
+  }
+
+  /* Touch-friendly navigation links */
+  .sidebar-nav a {
+    min-height: var(--min-touch-target);
+    padding: var(--spacing-md) var(--spacing-md);
+    display: flex;
+    align-items: center;
+  }
+
+  /* Hide backdrop on desktop */
+  .sidebar-backdrop {
+    display: block;
+  }
+}
+
+/* Desktop: Hide FAB, show sidebar always */
+@media (min-width: 1024px) {
+  .fab-button {
+    display: none;
+  }
+
+  .sidebar-backdrop {
+    display: none;
+  }
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 639px) {
+  .main-content {
+    padding: var(--spacing-md);
+    /* Add bottom padding for FAB clearance */
+    padding-bottom: calc(var(--fab-size) + var(--fab-bottom) + var(--spacing-lg));
   }
 
   .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Responsive widget styles */
+  .widget-header {
+    padding: var(--spacing-md);
+    min-height: var(--min-touch-target);
+  }
+
+  .widget-body {
+    padding: var(--spacing-sm);
+  }
+
+  .current-value-widget {
+    padding: var(--spacing-sm);
+  }
+
+  .current-value-widget .measurement-name {
+    font-size: clamp(0.65rem, 2vw, 0.75rem);
+  }
+
+  .current-value-widget .value {
+    font-size: clamp(1.2rem, 6vw, 2.2rem);
+  }
+
+  .current-value-widget .unit {
+    font-size: clamp(0.7rem, 2.5vw, 1rem);
+  }
+
+  .time-series-widget .widget-title,
+  .gauge-widget .widget-title {
+    font-size: clamp(0.65rem, 2vw, 0.75rem);
+  }
+
+  /* Widget action buttons - larger touch targets */
+  .widget-edit-btn,
+  .widget-delete-btn {
+    padding: var(--spacing-xs);
+    font-size: 1.25rem;
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Table responsiveness */
+  .table-container {
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    /* Add visual cue for scrolling */
+    box-shadow: inset -10px 0 8px -8px rgba(0, 0, 0, 0.15);
+  }
+
+  table {
+    min-width: 600px; /* Prevent table from collapsing */
+    font-size: 0.875rem;
+  }
+
+  table th,
+  table td {
+    padding: var(--spacing-sm);
+    white-space: nowrap;
+  }
+
+  /* Touch-friendly table action buttons */
+  table button {
+    min-height: var(--min-touch-target);
+    min-width: var(--min-touch-target);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  /* Analytics KPI cards - single column on mobile */
+  .kpi-summary-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .kpi-card {
+    padding: var(--spacing-md);
+  }
+
+  .kpi-value {
+    font-size: 1.5rem;
+  }
+
+  /* Chart containers */
+  .chart-container {
+    padding: var(--spacing-md);
+  }
+
+  .chart-title {
+    font-size: 1rem;
+  }
+
+  /* Time range selector - wrap on mobile */
+  .time-range-selector {
+    flex-wrap: wrap;
+  }
+
+  .time-range-btn {
+    flex: 1 1 calc(50% - 5px); /* 2 buttons per row */
+    min-width: 80px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: center;
+  }
+
+  /* Forms - touch-friendly */
+  .form-control {
+    padding: var(--spacing-md);
+    font-size: 16px; /* Prevent iOS zoom on focus */
+    min-height: var(--min-touch-target);
+  }
+
+  .form-group {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .form-group label {
+    margin-bottom: var(--spacing-md);
+  }
+
+  /* Buttons - touch-friendly */
+  .btn {
+    min-height: var(--min-touch-target);
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 1rem;
+  }
+
+  /* Modals - full screen on mobile */
+  .modal-content {
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    position: sticky;
+    top: 0;
+    background: var(--surface-color);
+    z-index: 10;
+    border-bottom: 2px solid var(--border-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .modal-header h2 {
+    font-size: 1.125rem;
+  }
+
+  .modal-body {
+    padding: var(--spacing-lg);
+  }
+
+  .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface-color);
+    z-index: 10;
+    border-top: 2px solid var(--border-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+    flex-direction: column;
+  }
+
+  .modal-footer button {
+    width: 100%; /* Full width buttons */
+    justify-content: center;
+  }
+
+  /* Global touch optimizations */
+  button,
+  a.btn,
+  .clickable,
+  input[type="checkbox"],
+  input[type="radio"],
+  select {
+    min-height: var(--min-touch-target);
+  }
+
+  /* Prevent text selection during drag */
+  .react-grid-item.react-draggable-dragging {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Larger resize handle on mobile */
+  .react-resizable-handle-se {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Card spacing */
+  .card {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-lg);
+  }
+
+  /* Fluid typography */
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+
+  h2 {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+
+  .header h1 {
+    font-size: clamp(1.25rem, 5vw, 2rem);
+  }
+
+  .sidebar h1 {
+    font-size: 1.25rem;
+  }
+
+  /* Dashboard header responsive */
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .dashboard-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-actions button {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .control-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -628,6 +999,21 @@ pre {
   color: var(--danger-color);
 }
 
+.edit-layout-btn-compact {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: color 0.2s;
+}
+
+.edit-layout-btn-compact:hover {
+  color: var(--primary-color);
+}
+
 .widget-body {
   flex: 1;
   padding: 16px;
@@ -659,41 +1045,62 @@ pre {
 
 /* Current Value Widget */
 .current-value-widget {
-  text-align: center;
-  padding: 12px 8px;
-  border-left: 4px solid var(--primary-color);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  padding: 8px 12px;
+  border-left: 4px solid var(--primary-color);
   height: 100%;
   min-height: 0;
   flex: 1;
+  gap: 2px;
+}
+
+.current-value-widget .measurement-name {
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.current-value-widget .value-container {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 2px;
 }
 
 .current-value-widget .value {
-  font-size: clamp(1.25rem, 4vw, 2.5rem);
-  font-weight: bold;
-  line-height: 1.2;
-  margin-bottom: 4px;
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  font-weight: 700;
+  line-height: 1;
 }
 
 .current-value-widget .unit {
-  font-size: clamp(0.75rem, 2vw, 1rem);
+  font-size: clamp(0.8rem, 2vw, 1.1rem);
   color: var(--text-secondary);
-  margin-bottom: 4px;
+  font-weight: 500;
 }
 
 .current-value-widget .threshold-label {
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
   font-weight: 600;
-  margin-bottom: 4px;
+  text-align: center;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin: 2px 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .current-value-widget .timestamp {
-  font-size: clamp(0.625rem, 1.2vw, 0.75rem);
+  font-size: clamp(0.6rem, 1.2vw, 0.7rem);
   color: var(--text-secondary);
-  margin-top: 4px;
+  text-align: center;
+  margin-top: 2px;
+  opacity: 0.8;
 }
 
 /* Time Series Widget */
@@ -702,6 +1109,25 @@ pre {
   height: 100%;
   min-height: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px;
+}
+
+.time-series-widget .widget-title {
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.time-series-widget .chart-container {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
 /* Gauge Widget */
@@ -711,8 +1137,45 @@ pre {
   min-height: 0;
   flex: 1;
   display: flex;
+  flex-direction: column;
+  padding: 4px 8px;
+}
+
+.gauge-widget .threshold-label {
+  font-size: clamp(0.65rem, 1.4vw, 0.75rem);
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.gauge-widget .widget-title {
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.gauge-widget .chart-container {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
+  margin: 0 0 8px 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
 /* Status Widget */
@@ -1013,6 +1476,17 @@ pre {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* When modal is inside a widget (transformed container), use absolute positioning */
+.composite-widget .modal-overlay {
+  position: fixed;
+  inset: 0;
+  align-items: flex-start;
+  padding-top: 40px;
+  padding-bottom: 40px;
 }
 
 .modal-content {
@@ -1021,8 +1495,18 @@ pre {
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  margin: auto;
+}
+
+/* Ensure modal content doesn't exceed viewport height when inside widget */
+.composite-widget .modal-overlay .modal-content {
+  max-height: calc(100vh - 80px);
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .modal-header {
@@ -1031,6 +1515,7 @@ pre {
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -1056,17 +1541,18 @@ pre {
 
 .modal-body {
   padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  padding-right: 20px;
-  margin-top: 20px;
+  padding: 20px 24px;
   border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .required {
@@ -1216,32 +1702,36 @@ pre {
   border-bottom: 2px solid var(--text-secondary);
 }
 
-/* Responsive adjustments for dashboard */
-@media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
+/* Formula Control for Template Sections */
+.section-formula-control {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
 
-  .dashboard-actions {
-    width: 100%;
-    flex-wrap: wrap;
-  }
+.section-formula-control label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #495057;
+}
 
-  .dashboard-actions button {
-    flex: 1;
-    min-width: 100px;
-  }
+.section-formula-control input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: 'Courier New', monospace;
+}
 
-  .control-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .modal-content {
-    width: 95%;
-    max-width: none;
-  }
+.section-formula-control .form-help {
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+  font-size: 0.75rem;
+  color: #6c757d;
 }
 
 /* Y-Axis Controls for Template Sections */
@@ -1335,6 +1825,13 @@ pre {
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 6px;
   overflow: hidden;
+}
+
+/* Hide border when no-border class is applied */
+.inner-grid-item.no-border {
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 /* Inner Widget Header (drag handle - only visible in edit mode) */

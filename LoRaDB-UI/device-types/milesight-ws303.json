@@ -1,0 +1,129 @@
+{
+  "deviceType": "milesight-ws303",
+  "name": "Milesight WS303 Water Leak Sensor",
+  "manufacturer": "Milesight",
+  "description": "LoRaWAN Water Leak Detection Sensor with battery monitoring",
+  "version": "1.0.0",
+  "measurements": [
+    {
+      "id": "leakage_status",
+      "path": "decoded_payload.object.leakage_status",
+      "name": "Leak Status",
+      "unit": "",
+      "decimals": 0,
+      "valueType": "string",
+      "defaultWidget": "status",
+      "widgets": {
+        "current-value": {
+          "enabled": false
+        },
+        "time-series": {
+          "enabled": false
+        },
+        "gauge": {
+          "enabled": false
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "eq", "value": "normal", "status": "success", "label": "Normal - No Leak", "valueType": "string" },
+            { "operator": "eq", "value": "leak", "status": "error", "label": "Leak Detected!", "valueType": "string" },
+            { "operator": "eq", "value": "alarm", "status": "error", "label": "Alarm!", "valueType": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "battery",
+      "path": "decoded_payload.object.battery",
+      "name": "Battery Level",
+      "unit": "%",
+      "decimals": 0,
+      "defaultWidget": "gauge",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 20, "color": "#ef4444", "label": "Critical" },
+            { "min": 20, "max": 50, "color": "#f59e0b", "label": "Low" },
+            { "min": 50, "max": 100, "color": "#10b981", "label": "Good" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 100,
+          "showArea": true,
+          "color": "#10b981"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 100,
+          "zones": [
+            { "from": 0, "to": 20, "color": "#ef4444" },
+            { "from": 20, "to": 50, "color": "#f59e0b" },
+            { "from": 50, "to": 100, "color": "#10b981" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 20, "status": "error", "label": "Critical Battery" },
+            { "operator": "between", "min": 20, "max": 50, "status": "warning", "label": "Low Battery" },
+            { "operator": "gte", "value": 50, "status": "success", "label": "Battery OK" }
+          ]
+        }
+      }
+    }
+  ],
+  "widgetTemplates": [
+    {
+      "id": "overview",
+      "name": "Leak Status Overview",
+      "description": "Current leak status with battery level",
+      "layout": "vertical",
+      "defaultSize": { "w": 4, "h": 4 },
+      "sections": [
+        {
+          "measurementId": "leakage_status",
+          "displayTypes": ["status"]
+        },
+        {
+          "measurementId": "battery",
+          "displayTypes": ["current-value"]
+        }
+      ]
+    },
+    {
+      "id": "detailed",
+      "name": "Detailed View",
+      "description": "Leak status with battery gauge and trend",
+      "layout": "grid",
+      "defaultSize": { "w": 6, "h": 5 },
+      "sections": [
+        {
+          "measurementId": "leakage_status",
+          "displayTypes": ["status"]
+        },
+        {
+          "measurementId": "battery",
+          "displayTypes": ["gauge", "time-series"]
+        }
+      ]
+    },
+    {
+      "id": "compact",
+      "name": "Compact Status",
+      "description": "Minimal view showing only leak status",
+      "layout": "vertical",
+      "defaultSize": { "w": 3, "h": 2 },
+      "sections": [
+        {
+          "measurementId": "leakage_status",
+          "displayTypes": ["status"]
+        }
+      ]
+    }
+  ]
+}

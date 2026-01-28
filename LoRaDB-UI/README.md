@@ -88,16 +88,41 @@ CORS_ORIGIN=http://192.168.1.200:3000
 
 ### 3. Start the Services
 
+#### Option A: Development (Build Locally)
+
 ```bash
-# Build and start both frontend and backend
-docker-compose up -d
+# Build and start both frontend and backend from source
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Check service status
-docker-compose ps
+docker compose ps
 ```
+
+#### Option B: Production (Pre-Built Images from GHCR)
+
+**Recommended for production deployments** - uses pre-built images from GitHub Container Registry:
+
+```bash
+# Configure repository name in .env
+echo "GITHUB_REPOSITORY=yourusername/loradb-ui" >> .env
+echo "IMAGE_TAG=latest" >> .env
+
+# Pull and start pre-built images
+docker compose -f docker-compose.ghcr.yml pull
+docker compose -f docker-compose.ghcr.yml up -d
+
+# View logs
+docker compose -f docker-compose.ghcr.yml logs -f
+```
+
+**See [DEPLOYMENT.md](DEPLOYMENT.md) for complete production deployment guide, including:**
+- GitHub Actions CI/CD setup
+- Versioning and tagging strategy
+- Update and rollback procedures
+- Monitoring and troubleshooting
 
 ### 4. Access the UI
 

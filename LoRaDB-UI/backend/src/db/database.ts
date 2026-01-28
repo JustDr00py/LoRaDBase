@@ -69,6 +69,78 @@ export function initializeSchema(): void {
     )
   `);
 
+  // Create or migrate dashboards table
+  // Check if table exists and if it has server_id column
+  const tableInfo = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='dashboards'").get() as any;
+
+  if (!tableInfo) {
+    // Table doesn't exist, create with server_id
+    db.exec(`
+      CREATE TABLE dashboards (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        server_id INTEGER NOT NULL,
+        name TEXT NOT NULL DEFAULT 'Default Dashboard',
+        is_default INTEGER NOT NULL DEFAULT 0,
+        version TEXT NOT NULL,
+        time_range TEXT NOT NULL,
+        auto_refresh INTEGER NOT NULL,
+        refresh_interval INTEGER NOT NULL,
+        widgets TEXT NOT NULL,
+        layouts TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE
+      )
+    `);
+  } else {
+    // Table exists, check if server_id column exists
+    const columnInfo = db.prepare("PRAGMA table_info(dashboards)").all() as any[];
+    const hasServerId = columnInfo.some((col) => col.name === 'server_id');
+
+    if (!hasServerId) {
+      console.log('🔄 Migrating dashboards table to add server_id column...');
+
+      // SQLite doesn't support ADD COLUMN with foreign key, so we need to recreate the table
+      db.exec(`
+        BEGIN TRANSACTION;
+
+        -- Rename old table
+        ALTER TABLE dashboards RENAME TO dashboards_old;
+
+        -- Create new table with server_id
+        CREATE TABLE dashboards (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          server_id INTEGER NOT NULL,
+          name TEXT NOT NULL DEFAULT 'Default Dashboard',
+          is_default INTEGER NOT NULL DEFAULT 0,
+          version TEXT NOT NULL,
+          time_range TEXT NOT NULL,
+          auto_refresh INTEGER NOT NULL,
+          refresh_interval INTEGER NOT NULL,
+          widgets TEXT NOT NULL,
+          layouts TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE
+        );
+
+        -- Copy data from old table to new table
+        -- Assign all existing dashboards to the first server (if any exists)
+        INSERT INTO dashboards (id, server_id, name, is_default, version, time_range, auto_refresh, refresh_interval, widgets, layouts, created_at, updated_at)
+        SELECT id, (SELECT id FROM servers LIMIT 1), name, is_default, version, time_range, auto_refresh, refresh_interval, widgets, layouts, created_at, updated_at
+        FROM dashboards_old
+        WHERE (SELECT COUNT(*) FROM servers) > 0;
+
+        -- Drop old table
+        DROP TABLE dashboards_old;
+
+        COMMIT;
+      `);
+
+      console.log('✅ Dashboards table migrated successfully');
+    }
+  }
+
   // Create indexes
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_failed_attempts_server
@@ -83,6 +155,16 @@ export function initializeSchema(): void {
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_failed_attempts_time
     ON failed_auth_attempts(attempted_at)
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_dashboards_server
+    ON dashboards(server_id)
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_dashboards_server_default
+    ON dashboards(server_id, is_default)
   `);
 
   console.log('✅ Database schema initialized successfully');

@@ -1,5 +1,6 @@
 import { db } from '../database';
 import { serverRepository, Server } from './serverRepository';
+import { dashboardRepository } from './dashboardRepository';
 import {
   BackupServerData,
   ValidationResult,
@@ -49,6 +50,130 @@ class BackupRepository {
       created_at: server.created_at,
       updated_at: server.updated_at,
     }));
+  }
+
+  /**
+   * Export all dashboards (from all servers)
+   * @returns Array of dashboards for backup with server names
+   */
+  exportDashboards(): any[] {
+    // Get all dashboards across all servers
+    const stmt = db.prepare(`
+      SELECT d.*, s.name as server_name
+      FROM dashboards d
+      JOIN servers s ON d.server_id = s.id
+      ORDER BY s.name, d.is_default DESC, d.created_at DESC
+    `);
+    const dashboards = stmt.all() as any[];
+
+    // Return dashboards with parsed JSON and server reference
+    return dashboards.map((d) => ({
+      server_name: d.server_name,  // Reference server by name for portability
+      name: d.name,
+      is_default: d.is_default === 1,
+      version: d.version,
+      time_range: d.time_range,
+      auto_refresh: d.auto_refresh === 1,
+      refresh_interval: d.refresh_interval,
+      widgets: JSON.parse(d.widgets),
+      layouts: JSON.parse(d.layouts),
+      created_at: d.created_at,
+      updated_at: d.updated_at,
+    }));
+  }
+
+  /**
+   * Import dashboards with merge or replace strategy
+   * @param dashboards - Dashboards to import (with server_name reference)
+   * @param strategy - Import strategy (merge or replace)
+   * @returns Import result with counts and errors
+   */
+  importDashboards(
+    dashboards: any[],
+    strategy: ImportStrategy
+  ): { imported: number; skipped: number; errors: string[] } {
+    const result = {
+      imported: 0,
+      skipped: 0,
+      errors: [] as string[],
+    };
+
+    if (!dashboards || dashboards.length === 0) {
+      return result;
+    }
+
+    try {
+      db.transaction(() => {
+        // Replace strategy: delete all existing dashboards
+        if (strategy === 'replace') {
+          const deleteStmt = db.prepare('DELETE FROM dashboards');
+          const deleteResult = deleteStmt.run();
+          console.log(`Deleted ${deleteResult.changes} existing dashboards for replace strategy`);
+        }
+
+        // Import each dashboard
+        for (const dashboard of dashboards) {
+          try {
+            // Validate dashboard data
+            if (!dashboard.version || !dashboard.time_range) {
+              result.errors.push(`Invalid dashboard data`);
+              result.skipped++;
+              continue;
+            }
+
+            // Map server name to server ID
+            if (!dashboard.server_name) {
+              result.errors.push(`Dashboard missing server_name reference`);
+              result.skipped++;
+              continue;
+            }
+
+            const server = serverRepository.findByName(dashboard.server_name);
+            if (!server) {
+              result.errors.push(`Server '${dashboard.server_name}' not found (skipped dashboard)`);
+              result.skipped++;
+              continue;
+            }
+
+            // For merge strategy, skip if it's a default dashboard and one already exists for this server
+            if (strategy === 'merge' && dashboard.is_default) {
+              const existingDefault = dashboardRepository.getDefault(server.id);
+              if (existingDefault) {
+                result.errors.push(`Default dashboard for server '${dashboard.server_name}' already exists (skipped)`);
+                result.skipped++;
+                continue;
+              }
+            }
+
+            // Create dashboard
+            const created = dashboardRepository.create({
+              serverId: server.id,
+              name: dashboard.name || 'Imported Dashboard',
+              version: dashboard.version,
+              timeRange: dashboard.time_range,
+              autoRefresh: dashboard.auto_refresh !== false,
+              refreshInterval: dashboard.refresh_interval || 60,
+              widgets: dashboard.widgets || [],
+              layouts: dashboard.layouts || { lg: [] },
+            });
+
+            // Set as default if it was default in backup
+            if (dashboard.is_default) {
+              dashboardRepository.setDefault(created.id);
+            }
+
+            result.imported++;
+          } catch (error: any) {
+            result.errors.push(`Dashboard import failed: ${error.message}`);
+            result.skipped++;
+          }
+        }
+      })();
+    } catch (error: any) {
+      throw new Error(`Dashboard import failed: ${error.message}`);
+    }
+
+    return result;
   }
 
   /**
@@ -223,7 +348,17 @@ class BackupRepository {
 
           // Extract timestamp from filename: backup-automatic-YYYY-MM-DD-HHmmss.json
           const match = file.match(/backup-automatic-(.+)\.json$/);
-          const timestamp = match ? match[1].replace(/-(\d{6})$/, 'T$1') : '';
+          let timestamp = '';
+          if (match) {
+            // Convert YYYY-MM-DD-HHmmss to YYYY-MM-DDTHH:mm:ss
+            const parts = match[1].split('-');
+            if (parts.length === 4 && parts[3].length === 6) {
+              const date = parts.slice(0, 3).join('-'); // YYYY-MM-DD
+              const time = parts[3]; // HHmmss
+              const formattedTime = `${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}`; // HH:mm:ss
+              timestamp = `${date}T${formattedTime}`;
+            }
+          }
 
           return {
             filename: file,

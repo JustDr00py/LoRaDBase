@@ -14,6 +14,10 @@ interface MeasurementCustomizationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (overrides: {
+    customTitle?: string;
+    customUnit?: string;
+    hideBorder?: boolean;
+    showThresholdLabels?: boolean;
     customColor?: string;
     customThresholds?: Threshold[];
     customStatusConditions?: StatusCondition[];
@@ -22,6 +26,10 @@ interface MeasurementCustomizationModalProps {
   measurement: MeasurementDefinition;
   widgetType: WidgetType;
   currentOverrides?: {
+    customTitle?: string;
+    customUnit?: string;
+    hideBorder?: boolean;
+    showThresholdLabels?: boolean;
     customColor?: string;
     customThresholds?: Threshold[];
     customStatusConditions?: StatusCondition[];
@@ -37,6 +45,10 @@ export const MeasurementCustomizationModal: React.FC<MeasurementCustomizationMod
   widgetType,
   currentOverrides,
 }) => {
+  const [customTitle, setCustomTitle] = useState<string>('');
+  const [customUnit, setCustomUnit] = useState<string>('');
+  const [hideBorder, setHideBorder] = useState<boolean>(false);
+  const [showThresholdLabels, setShowThresholdLabels] = useState<boolean>(false);
   const [customColor, setCustomColor] = useState<string>('');
   const [thresholds, setThresholds] = useState<Threshold[]>([]);
   const [statusConditions, setStatusConditions] = useState<StatusCondition[]>([]);
@@ -45,6 +57,18 @@ export const MeasurementCustomizationModal: React.FC<MeasurementCustomizationMod
   // Initialize state from current overrides or measurement defaults
   useEffect(() => {
     if (!isOpen) return;
+
+    // Custom title
+    setCustomTitle(currentOverrides?.customTitle || '');
+
+    // Custom unit
+    setCustomUnit(currentOverrides?.customUnit || '');
+
+    // Hide border
+    setHideBorder(currentOverrides?.hideBorder || false);
+
+    // Show threshold labels (default to true for backward compatibility)
+    setShowThresholdLabels(currentOverrides?.showThresholdLabels ?? true);
 
     // Color (for time-series and gauge)
     if (widgetType === 'time-series') {
@@ -81,11 +105,33 @@ export const MeasurementCustomizationModal: React.FC<MeasurementCustomizationMod
 
   const handleSave = () => {
     const overrides: {
+      customTitle?: string;
+      customUnit?: string;
+      hideBorder?: boolean;
+      showThresholdLabels?: boolean;
       customColor?: string;
       customThresholds?: Threshold[];
       customStatusConditions?: StatusCondition[];
       customGaugeZones?: GaugeZone[];
     } = {};
+
+    // Save custom title if set
+    if (customTitle && customTitle.trim() !== '') {
+      overrides.customTitle = customTitle.trim();
+    }
+
+    // Save custom unit if set
+    if (customUnit && customUnit.trim() !== '') {
+      overrides.customUnit = customUnit.trim();
+    }
+
+    // Save hide border setting
+    overrides.hideBorder = hideBorder;
+
+    // Save show threshold labels setting (for current-value and gauge)
+    if (widgetType === 'current-value' || widgetType === 'gauge') {
+      overrides.showThresholdLabels = showThresholdLabels;
+    }
 
     if (widgetType === 'time-series' && customColor) {
       overrides.customColor = customColor;
@@ -212,6 +258,60 @@ export const MeasurementCustomizationModal: React.FC<MeasurementCustomizationMod
             </p>
           </div>
 
+          {/* Custom Title */}
+          <div className="form-section">
+            <h3>Display Name</h3>
+            <div className="form-group">
+              <label>Custom Title:</label>
+              <input
+                type="text"
+                placeholder={measurement.name}
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                className="form-input"
+              />
+              <p className="form-help">
+                Leave empty to use the default name: "{measurement.name}"
+              </p>
+            </div>
+          </div>
+
+          {/* Custom Unit */}
+          <div className="form-section">
+            <h3>Unit of Measurement</h3>
+            <div className="form-group">
+              <label>Custom Unit:</label>
+              <input
+                type="text"
+                placeholder={measurement.unit}
+                value={customUnit}
+                onChange={(e) => setCustomUnit(e.target.value)}
+                className="form-input"
+              />
+              <p className="form-help">
+                Leave empty to use the default unit: "{measurement.unit}". Example: "% RH" for relative humidity.
+              </p>
+            </div>
+          </div>
+
+          {/* Hide Border */}
+          <div className="form-section">
+            <h3>Appearance</h3>
+            <div className="form-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={hideBorder}
+                  onChange={(e) => setHideBorder(e.target.checked)}
+                />
+                Hide border around widget
+              </label>
+              <p className="form-help">
+                Removes the border and background from this measurement widget for a cleaner look.
+              </p>
+            </div>
+          </div>
+
           {/* Time Series Color */}
           {widgetType === 'time-series' && (
             <div className="form-section">
@@ -238,6 +338,20 @@ export const MeasurementCustomizationModal: React.FC<MeasurementCustomizationMod
               <p className="form-help">
                 Define color-coded thresholds based on the value. First matching condition wins.
               </p>
+
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={showThresholdLabels}
+                    onChange={(e) => setShowThresholdLabels(e.target.checked)}
+                  />
+                  Show current threshold label
+                </label>
+                <p className="form-help">
+                  Displays the current threshold status (e.g., "Good", "Poor") with its color below the value.
+                </p>
+              </div>
 
               {thresholds.map((threshold, index) => (
                 <div key={index} className="threshold-config">
@@ -445,6 +559,20 @@ export const MeasurementCustomizationModal: React.FC<MeasurementCustomizationMod
             <div className="form-section">
               <h3>Gauge Zones</h3>
               <p className="form-help">Define color zones for the gauge.</p>
+
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={showThresholdLabels}
+                    onChange={(e) => setShowThresholdLabels(e.target.checked)}
+                  />
+                  Show threshold status label
+                </label>
+                <p className="form-help">
+                  Displays the current threshold status (e.g., "Normal", "Warm", "Hot") below the gauge.
+                </p>
+              </div>
 
               {gaugeZones.map((zone, index) => (
                 <div key={index} className="gauge-zone-config">

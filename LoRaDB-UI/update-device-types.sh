@@ -21,6 +21,12 @@ fi
 echo "Found $count device type file(s):"
 echo "$device_files" | sed 's/^/  - /'
 
+# Fix permissions on all device type files (should be 644)
+echo ""
+echo "Checking and fixing permissions..."
+find "$DEVICE_TYPES_DIR" -maxdepth 1 -name "*.json" -exec chmod 644 {} \;
+echo "✅ All device type files set to 644 (rw-r--r--)"
+
 # Generate index.json
 cat > "$INDEX_FILE" << EOF
 {

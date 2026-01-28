@@ -27,6 +27,10 @@ import type {
   BackupFile,
   ImportResult,
   ImportStrategy,
+  DashboardResponse,
+  CreateDashboardRequest,
+  UpdateDashboardRequest,
+  MigrateDashboardRequest,
 } from '../types/api';
 
 // Server Management
@@ -196,15 +200,11 @@ export const enforceRetention = async (): Promise<RetentionEnforceResponse> => {
 // Backup & Restore
 export const exportBackup = async (
   includeDeviceTypes: boolean = true,
-  saveAutomatic: boolean = false,
-  dashboards?: any,
-  settings?: any
+  saveAutomatic: boolean = false
 ): Promise<BackupData> => {
   const response = await apiClient.post<BackupData>('/api/backup/export', {
     includeDeviceTypes,
     saveAutomatic,
-    dashboards,
-    settings,
   });
   return response.data;
 };
@@ -232,4 +232,43 @@ export const downloadAutomaticBackup = async (filename: string): Promise<BackupD
 
 export const deleteAutomaticBackup = async (filename: string): Promise<void> => {
   await apiClient.delete(`/api/backup/${filename}`);
+};
+
+// Dashboard Management
+export const listDashboards = async (): Promise<DashboardResponse[]> => {
+  const response = await apiClient.get<DashboardResponse[]>('/api/dashboards');
+  return response.data;
+};
+
+export const getDefaultDashboard = async (): Promise<DashboardResponse> => {
+  const response = await apiClient.get<DashboardResponse>('/api/dashboards/default');
+  return response.data;
+};
+
+export const getDashboard = async (id: number): Promise<DashboardResponse> => {
+  const response = await apiClient.get<DashboardResponse>(`/api/dashboards/${id}`);
+  return response.data;
+};
+
+export const createDashboard = async (data: CreateDashboardRequest): Promise<DashboardResponse> => {
+  const response = await apiClient.post<DashboardResponse>('/api/dashboards', data);
+  return response.data;
+};
+
+export const updateDashboard = async (id: number, data: UpdateDashboardRequest): Promise<DashboardResponse> => {
+  const response = await apiClient.put<DashboardResponse>(`/api/dashboards/${id}`, data);
+  return response.data;
+};
+
+export const deleteDashboard = async (id: number): Promise<void> => {
+  await apiClient.delete(`/api/dashboards/${id}`);
+};
+
+export const setDefaultDashboard = async (id: number): Promise<void> => {
+  await apiClient.post(`/api/dashboards/${id}/set-default`);
+};
+
+export const migrateDashboard = async (data: MigrateDashboardRequest): Promise<DashboardResponse> => {
+  const response = await apiClient.post<DashboardResponse>('/api/dashboards/migrate', data);
+  return response.data;
 };

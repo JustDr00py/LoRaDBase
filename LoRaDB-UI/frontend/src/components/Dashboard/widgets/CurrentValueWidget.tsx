@@ -6,12 +6,19 @@ interface CurrentValueWidgetProps {
   data: WidgetData;
   measurement: MeasurementDefinition;
   config: CurrentValueWidgetConfig;
+  showThresholdLabels?: boolean;
 }
 
 /**
  * Evaluate if a value matches a threshold condition
  */
 const matchesThreshold = (value: number, threshold: Threshold): boolean => {
+  // Handle legacy format with just min/max (no operator)
+  if (!threshold.operator && threshold.min !== undefined && threshold.max !== undefined) {
+    return value >= threshold.min && value < threshold.max;
+  }
+
+  // Handle operator-based format
   switch (threshold.operator) {
     case '<':
       return threshold.value !== undefined && value < threshold.value;
@@ -25,7 +32,7 @@ const matchesThreshold = (value: number, threshold: Threshold): boolean => {
       return threshold.value !== undefined && value === threshold.value;
     case 'between':
       return threshold.min !== undefined && threshold.max !== undefined &&
-             value >= threshold.min && value <= threshold.max;
+             value >= threshold.min && value < threshold.max;
     default:
       return false;
   }
@@ -35,6 +42,7 @@ export const CurrentValueWidget: React.FC<CurrentValueWidgetProps> = ({
   data,
   measurement,
   config,
+  showThresholdLabels = true,
 }) => {
   if (data.error) {
     return <div className="widget-error">{data.error}</div>;
@@ -69,19 +77,26 @@ export const CurrentValueWidget: React.FC<CurrentValueWidgetProps> = ({
 
   return (
     <div className="current-value-widget" style={{ borderLeftColor: color }}>
-      <div className="value" style={{ color }}>
-        {valueType === 'string' && typeof data.currentValue === 'string' ? (
-          data.currentValue
-        ) : typeof data.currentValue === 'number' && displayDecimals !== undefined ? (
-          data.currentValue.toFixed(displayDecimals)
-        ) : (
-          '-'
+      <div className="measurement-name">{measurement.name}</div>
+      <div className="value-container">
+        <div className="value" style={{ color }}>
+          {valueType === 'string' && typeof data.currentValue === 'string' ? (
+            data.currentValue
+          ) : typeof data.currentValue === 'number' && displayDecimals !== undefined ? (
+            data.currentValue.toFixed(displayDecimals)
+          ) : (
+            '-'
+          )}
+        </div>
+        {valueType === 'number' && typeof data.currentValue === 'number' && displayUnit && (
+          <div className="unit">{displayUnit}</div>
         )}
       </div>
-      {valueType === 'number' && typeof data.currentValue === 'number' && displayUnit && (
-        <div className="unit">{displayUnit}</div>
+      {showThresholdLabels && label && (
+        <div className="threshold-label" style={{ backgroundColor: color, color: '#ffffff' }}>
+          {label}
+        </div>
       )}
-      {label && <div className="threshold-label">{label}</div>}
       {data.timestamp && (
         <div className="timestamp">{formatRelativeTime(data.timestamp)}</div>
       )}

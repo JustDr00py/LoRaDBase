@@ -8,6 +8,7 @@ import authRoutes from './routes/auth';
 import serverRoutes from './routes/servers';
 import proxyRoutes from './routes/proxy';
 import backupRoutes from './routes/backup';
+import dashboardRoutes from './routes/dashboards';
 
 // Initialize database (schema creation happens on import)
 import './db/database';
@@ -39,6 +40,7 @@ app.get('/', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/servers', serverRoutes);
 app.use('/api/backup', backupRoutes);
+app.use('/api/dashboards', dashboardRoutes);
 app.use('/api', proxyRoutes);
 
 // Error handlers (must be last)
@@ -67,6 +69,15 @@ app.listen(config.port, () => {
   console.log(`   GET  /api/backup/list           - List automatic backups`);
   console.log(`   GET  /api/backup/download/:file - Download automatic backup`);
   console.log(`   DELETE /api/backup/:file        - Delete automatic backup`);
+  console.log(`\n   Dashboards:`);
+  console.log(`   GET  /api/dashboards            - List all dashboards`);
+  console.log(`   GET  /api/dashboards/default    - Get default dashboard`);
+  console.log(`   GET  /api/dashboards/:id        - Get dashboard by ID`);
+  console.log(`   POST /api/dashboards            - Create new dashboard`);
+  console.log(`   PUT  /api/dashboards/:id        - Update dashboard`);
+  console.log(`   DELETE /api/dashboards/:id      - Delete dashboard`);
+  console.log(`   POST /api/dashboards/:id/set-default - Set as default`);
+  console.log(`   POST /api/dashboards/migrate    - Migrate from localStorage`);
   console.log(`\n   LoRaDB Proxy (requires authentication):`);
   console.log(`   GET  /api/health                - LoRaDB health check`);
   console.log(`   POST /api/query                 - Execute query`);

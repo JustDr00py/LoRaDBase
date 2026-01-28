@@ -10,6 +10,35 @@ export const config = {
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   masterPassword: process.env.MASTER_PASSWORD || '',
   masterSessionHours: parseInt(process.env.MASTER_SESSION_HOURS || '24', 10),
+
+  // Rate Limiting Configuration
+  rateLimits: {
+    // General API rate limit (applies to all /api/* routes)
+    general: {
+      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // Default: 15 minutes
+      max: parseInt(process.env.RATE_LIMIT_MAX || '300', 10), // Default: 300 requests
+    },
+    // Authentication attempts
+    auth: {
+      windowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || '900000', 10), // Default: 15 minutes
+      max: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '10', 10), // Default: 10 attempts
+    },
+    // Server creation
+    serverCreation: {
+      windowMs: parseInt(process.env.SERVER_CREATION_RATE_LIMIT_WINDOW_MS || '3600000', 10), // Default: 1 hour
+      max: parseInt(process.env.SERVER_CREATION_RATE_LIMIT_MAX || '10', 10), // Default: 10 creations
+    },
+    // Server deletion
+    serverDeletion: {
+      windowMs: parseInt(process.env.SERVER_DELETION_RATE_LIMIT_WINDOW_MS || '900000', 10), // Default: 15 minutes
+      max: parseInt(process.env.SERVER_DELETION_RATE_LIMIT_MAX || '20', 10), // Default: 20 deletions
+    },
+    // Master password authentication
+    masterPassword: {
+      windowMs: parseInt(process.env.MASTER_PASSWORD_RATE_LIMIT_WINDOW_MS || '900000', 10), // Default: 15 minutes
+      max: parseInt(process.env.MASTER_PASSWORD_RATE_LIMIT_MAX || '5', 10), // Default: 5 attempts
+    },
+  },
 };
 
 // Validate required config
@@ -40,3 +69,4 @@ console.log(`   JWT Expiration: ${config.jwtExpirationHours} hour(s)`);
 console.log(`   Master Session: ${config.masterSessionHours} hour(s)`);
 console.log(`   CORS Origin: ${config.corsOrigin}`);
 console.log(`   Environment: ${config.nodeEnv}`);
+console.log(`   Rate Limit (General): ${config.rateLimits.general.max} requests per ${config.rateLimits.general.windowMs / 60000} min`);

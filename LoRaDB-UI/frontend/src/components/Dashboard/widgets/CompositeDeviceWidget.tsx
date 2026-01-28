@@ -18,24 +18,23 @@ import { GaugeWidget } from './GaugeWidget';
 import { StatusWidget } from './StatusWidget';
 import { CompositeGridLayout } from './CompositeGridLayout';
 import { MeasurementCustomizationModal } from '../MeasurementCustomizationModal';
+import { applyFormula } from '../../../utils/widgetDataProcessor';
 
 interface CompositeDeviceWidgetProps {
   widget: WidgetInstance;
   deviceType: DeviceTypeDefinition;
   template: WidgetTemplate;
   measurementData: Array<{ measurementId: string; data: WidgetData }>;
-  onUpdateInnerLayout?: (widgetId: string, newLayout: Layout[]) => void;
+  onUpdateInnerLayout?: (widgetId: string, newLayout: { lg: Layout[]; md?: Layout[]; sm?: Layout[] }) => void;
   onUpdateWidget?: (widgetId: string, updates: Partial<WidgetInstance>) => void;
+  editMode: boolean;
 }
 
-// Generate default grid layout from template structure
-function generateDefaultLayout(
+// Generate default grid layout from template structure (responsive)
+function generateDefaultResponsiveLayouts(
   template: WidgetTemplate,
   widget: WidgetInstance
-): Layout[] {
-  const layout: Layout[] = [];
-  let y = 0;
-
+): { lg: Layout[]; md: Layout[]; sm: Layout[] } {
   // Helper to get measurement IDs from section (handles both single and array)
   const getMeasurementIds = (section: TemplateSection): string[] => {
     return Array.isArray(section.measurementId)
@@ -70,6 +69,13 @@ function generateDefaultLayout(
     sections = ordered;
   }
 
+  const lgLayout: Layout[] = [];
+  const mdLayout: Layout[] = [];
+  const smLayout: Layout[] = [];
+  let lgY = 0;
+  let mdY = 0;
+  let smY = 0;
+
   sections.forEach((section, sectionIdx) => {
     const measurementIds = getMeasurementIds(section);
 
@@ -87,36 +93,123 @@ function generateDefaultLayout(
         // Create unique key for each widget
         const key = `${measurementId}-${type}-${sectionIdx}`;
 
-        // Determine size based on widget type
-        let w = 6,
-          h = 3; // Default: half width, 3 rows
+        // Desktop (lg) - Side by side layout (existing behavior)
+        let lgW = 6, lgH = 3;
         if (type === 'time-series') {
-          w = 12; // Full width
-          h = 6; // Taller for charts
+          lgW = 12; lgH = 6;
         } else if (type === 'gauge') {
-          w = 4; // Third width
-          h = 5;
+          lgW = 4; lgH = 5;
         } else if (type === 'current-value' || type === 'status') {
-          w = 3; // Quarter width
-          h = 2; // Compact
+          lgW = 3; lgH = 2;
         }
-
-        layout.push({
+        lgLayout.push({
           i: key,
-          x: (typeIdx * w) % 12, // Position side by side
-          y: y,
-          w: w,
-          h: h,
+          x: (typeIdx * lgW) % 12,
+          y: lgY,
+          w: lgW,
+          h: lgH,
           minW: 2,
           minH: 2,
         });
+
+        // Tablet (md) - 2 per row for smaller widgets, full width for charts
+        let mdW = 6, mdH = 3;
+        if (type === 'time-series') {
+          mdW = 6; mdH = 5;
+        } else if (type === 'gauge') {
+          mdW = 3; mdH = 4;
+        } else if (type === 'current-value' || type === 'status') {
+          mdW = 3; mdH = 2;
+        }
+        mdLayout.push({
+          i: key,
+          x: (typeIdx * mdW) % 6,
+          y: mdY,
+          w: mdW,
+          h: mdH,
+          minW: 2,
+          minH: 2,
+        });
+
+        // Mobile (sm) - Stacked vertically (single column)
+        let smW = 2, smH = 3;
+        if (type === 'time-series') {
+          smW = 2; smH = 4;
+        } else if (type === 'gauge') {
+          smW = 2; smH = 4;
+        } else if (type === 'current-value' || type === 'status') {
+          smW = 2; smH = 3;
+        }
+        smLayout.push({
+          i: key,
+          x: 0, // Always start at x=0 for stacking
+          y: smY,
+          w: smW,
+          h: smH,
+          minW: 2,
+          minH: 2,
+        });
+        smY += smH; // Stack vertically
       });
     });
 
-    y += 6; // Move down for next section
+    // Move down for next section
+    lgY += 6;
+    mdY += 6;
   });
 
-  return layout;
+  return { lg: lgLayout, md: mdLayout, sm: smLayout };
+}
+
+// Migration helper - converts old single layout to responsive layouts
+function migrateToResponsiveLayout(
+  widget: WidgetInstance,
+  template: WidgetTemplate
+): { lg: Layout[]; md: Layout[]; sm: Layout[] } {
+  // Check if widget has innerLayout and if it's in old format (array) or new format (object)
+  if (widget.innerLayout) {
+    // Type guard: check if it's an array (old format) or object (new format)
+    if (Array.isArray(widget.innerLayout)) {
+      // Old format - migrate it
+      const lgLayout = widget.innerLayout;
+
+      // Generate md and sm layouts based on the lg layout
+      const mdLayout: Layout[] = lgLayout.map((item) => {
+        // Scale down for tablet (6 columns instead of 12)
+        const scaledX = Math.floor((item.x / 12) * 6);
+        const scaledW = Math.ceil((item.w / 12) * 6);
+
+        return {
+          ...item,
+          x: scaledX,
+          w: Math.min(scaledW, 6),
+          h: item.h,
+        };
+      });
+
+      // Stack vertically for mobile (2 columns, single column layout)
+      const smLayout: Layout[] = lgLayout.map((item, index) => {
+        return {
+          ...item,
+          x: 0,
+          w: 2,
+          y: index * item.h, // Stack vertically
+        };
+      });
+
+      return { lg: lgLayout, md: mdLayout, sm: smLayout };
+    } else {
+      // Already in new format, ensure all breakpoints are present
+      return {
+        lg: widget.innerLayout.lg,
+        md: widget.innerLayout.md || widget.innerLayout.lg,
+        sm: widget.innerLayout.sm || widget.innerLayout.lg,
+      };
+    }
+  }
+
+  // No existing layout, generate defaults
+  return generateDefaultResponsiveLayouts(template, widget);
 }
 
 export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
@@ -126,11 +219,10 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
   measurementData,
   onUpdateInnerLayout,
   onUpdateWidget,
+  editMode,
 }) => {
-  // Edit mode state
-  const [editMode, setEditMode] = useState(false);
-  const [innerLayout, setInnerLayout] = useState<Layout[]>(
-    widget.innerLayout || generateDefaultLayout(template, widget)
+  const [innerLayout, setInnerLayout] = useState<{ lg: Layout[]; md: Layout[]; sm: Layout[] }>(
+    migrateToResponsiveLayout(widget, template)
   );
 
   // Customization modal state
@@ -144,6 +236,25 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
     widgetType: null,
   });
 
+  // Helper function to apply formula to widget data
+  const applyFormulaToData = useCallback((data: WidgetData, formula?: string): WidgetData => {
+    if (!formula || typeof data.currentValue !== 'number') {
+      return data;
+    }
+
+    const transformedCurrentValue = applyFormula(data.currentValue, formula);
+    const transformedTimeSeries = data.timeSeries?.map((point) => ({
+      ...point,
+      value: applyFormula(point.value, formula),
+    }));
+
+    return {
+      ...data,
+      currentValue: transformedCurrentValue,
+      timeSeries: transformedTimeSeries,
+    };
+  }, []);
+
   // Helper function to render a widget by type
   const renderWidgetByType = useCallback(
     (
@@ -156,12 +267,19 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
       // Get measurement-specific overrides
       const overrides = widget.sectionOverrides?.[measurementId];
 
+      // Apply formula transformation if present
+      const transformedData = applyFormulaToData(data, overrides?.customFormula);
+
       switch (type) {
         case 'time-series':
           return (
             <TimeSeriesWidget
-              data={data}
-              measurement={measurement}
+              data={transformedData}
+              measurement={{
+                ...measurement,
+                name: overrides?.customTitle || measurement.name,
+                unit: overrides?.customUnit || measurement.unit,
+              }}
               config={{
                 ...measurement.widgets['time-series'],
                 color: overrides?.customColor || measurement.widgets['time-series']?.color,
@@ -173,33 +291,45 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
         case 'gauge':
           return (
             <GaugeWidget
-              data={data}
-              measurement={measurement}
+              data={transformedData}
+              measurement={{
+                ...measurement,
+                name: overrides?.customTitle || measurement.name,
+                unit: overrides?.customUnit || measurement.unit,
+              }}
               config={{
                 ...measurement.widgets.gauge,
                 zones: overrides?.customGaugeZones || measurement.widgets.gauge?.zones,
               }}
               widget={widget}
               yAxisOverride={yAxisOverride}
+              showThresholdLabels={overrides?.showThresholdLabels ?? true}
             />
           );
         case 'current-value':
           return (
             <CurrentValueWidget
-              data={data}
-              measurement={measurement}
+              data={transformedData}
+              measurement={{
+                ...measurement,
+                name: overrides?.customTitle || measurement.name,
+                unit: overrides?.customUnit || measurement.unit,
+              }}
               config={{
                 ...measurement.widgets['current-value'],
                 thresholds: overrides?.customThresholds || measurement.widgets['current-value']?.thresholds,
               }}
+              showThresholdLabels={overrides?.showThresholdLabels ?? true}
             />
           );
         case 'status':
           return (
             <StatusWidget
-              data={data}
+              data={transformedData}
               measurement={{
                 ...measurement,
+                name: overrides?.customTitle || measurement.name,
+                unit: overrides?.customUnit || measurement.unit,
                 widgets: {
                   ...measurement.widgets,
                   status: {
@@ -214,7 +344,7 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
           return <div className="widget-error">Unknown widget type: {type}</div>;
       }
     },
-    [widget]
+    [widget, applyFormulaToData]
   );
 
   // Apply custom section ordering if specified
@@ -278,10 +408,11 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
         displayTypes.forEach((type) => {
           const key = `${measurementId}-${type}-${sectionIdx}`;
           const yAxisOverride = widget.sectionOverrides?.[measurementId];
+          const hideBorder = widget.sectionOverrides?.[measurementId]?.hideBorder;
 
           // Render widget with wrapper for grid
           items.push(
-            <div key={key} className="inner-grid-item">
+            <div key={key} className={`inner-grid-item ${hideBorder ? 'no-border' : ''}`}>
               {editMode && (
                 <div className="inner-widget-header">
                   <span className="inner-widget-label">
@@ -322,12 +453,12 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
     renderWidgetByType,
   ]);
 
-  // Handle layout change
+  // Handle layout change (for responsive layouts)
   const handleLayoutChange = useCallback(
-    (newLayout: Layout[]) => {
-      setInnerLayout(newLayout);
+    (layouts: { lg: Layout[]; md?: Layout[]; sm?: Layout[] }) => {
+      setInnerLayout(layouts as { lg: Layout[]; md: Layout[]; sm: Layout[] });
       if (onUpdateInnerLayout) {
-        onUpdateInnerLayout(widget.id, newLayout);
+        onUpdateInnerLayout(widget.id, layouts);
       }
     },
     [widget.id, onUpdateInnerLayout]
@@ -344,6 +475,10 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
 
   // Handle saving customization
   const handleSaveCustomization = (overrides: {
+    customTitle?: string;
+    customUnit?: string;
+    hideBorder?: boolean;
+    showThresholdLabels?: boolean;
     customColor?: string;
     customThresholds?: Threshold[];
     customStatusConditions?: StatusCondition[];
@@ -370,17 +505,6 @@ export const CompositeDeviceWidget: React.FC<CompositeDeviceWidgetProps> = ({
 
   return (
     <div className="composite-widget">
-      {/* Edit Mode Toggle */}
-      <div className="composite-header">
-        <button
-          className="edit-layout-btn"
-          onClick={() => setEditMode(!editMode)}
-          title={editMode ? 'Lock Layout' : 'Edit Layout'}
-        >
-          {editMode ? '🔓 Lock' : '🔒 Edit Layout'}
-        </button>
-      </div>
-
       {/* Grid Layout */}
       <CompositeGridLayout
         layout={innerLayout}

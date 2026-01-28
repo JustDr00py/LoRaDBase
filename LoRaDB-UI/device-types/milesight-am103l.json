@@ -1,0 +1,365 @@
+{
+  "deviceType": "milesight-am103l",
+  "name": "Milesight AM103L",
+  "manufacturer": "Milesight",
+  "description": "Indoor Air Quality Sensor with CO2, Temperature, and Humidity monitoring",
+  "version": "1.0.0",
+  "measurements": [
+    {
+      "id": "co2",
+      "path": "decoded_payload.object.co2",
+      "name": "CO2 Level",
+      "unit": "ppm",
+      "decimals": 0,
+      "defaultWidget": "time-series",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 400, "color": "#10b981", "label": "Excellent" },
+            { "min": 400, "max": 800, "color": "#3b82f6", "label": "Good" },
+            { "min": 800, "max": 1000, "color": "#fbbf24", "label": "Fair" },
+            { "min": 1000, "max": 1500, "color": "#f59e0b", "label": "Poor" },
+            { "min": 1500, "max": 5000, "color": "#ef4444", "label": "Very Poor" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 2000,
+          "showArea": true,
+          "color": "#2563eb"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 2000,
+          "zones": [
+            { "from": 0, "to": 800, "color": "#10b981" },
+            { "from": 800, "to": 1000, "color": "#fbbf24" },
+            { "from": 1000, "to": 1500, "color": "#f59e0b" },
+            { "from": 1500, "to": 2000, "color": "#ef4444" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 800, "status": "success", "label": "Good Air Quality" },
+            { "operator": "between", "min": 800, "max": 1000, "status": "warning", "label": "Fair Air Quality" },
+            { "operator": "gte", "value": 1000, "status": "error", "label": "Poor Air Quality" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "temperature",
+      "path": "decoded_payload.object.temperature",
+      "name": "Temperature",
+      "unit": "°C",
+      "decimals": 1,
+      "defaultWidget": "time-series",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": -40, "max": 10, "color": "#3b82f6", "label": "Cold" },
+            { "min": 10, "max": 18, "color": "#06b6d4", "label": "Cool" },
+            { "min": 18, "max": 24, "color": "#10b981", "label": "Comfortable" },
+            { "min": 24, "max": 28, "color": "#f59e0b", "label": "Warm" },
+            { "min": 28, "max": 60, "color": "#ef4444", "label": "Hot" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 40,
+          "showArea": true,
+          "color": "#ef4444"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 40,
+          "zones": [
+            { "from": 0, "to": 18, "color": "#3b82f6" },
+            { "from": 18, "to": 24, "color": "#10b981" },
+            { "from": 24, "to": 28, "color": "#f59e0b" },
+            { "from": 28, "to": 40, "color": "#ef4444" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 10, "status": "info", "label": "Cold" },
+            { "operator": "between", "min": 10, "max": 18, "status": "info", "label": "Cool" },
+            { "operator": "between", "min": 18, "max": 24, "status": "success", "label": "Comfortable" },
+            { "operator": "between", "min": 24, "max": 28, "status": "warning", "label": "Warm" },
+            { "operator": "gt", "value": 28, "status": "error", "label": "Hot" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "humidity",
+      "path": "decoded_payload.object.humidity",
+      "name": "Humidity",
+      "unit": "%",
+      "decimals": 1,
+      "defaultWidget": "time-series",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 30, "color": "#f59e0b", "label": "Too Dry" },
+            { "min": 30, "max": 40, "color": "#84cc16", "label": "Comfortable" },
+            { "min": 40, "max": 60, "color": "#10b981", "label": "Ideal" },
+            { "min": 60, "max": 70, "color": "#84cc16", "label": "Comfortable" },
+            { "min": 70, "max": 100, "color": "#f59e0b", "label": "Too Humid" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 100,
+          "showArea": true,
+          "color": "#8b5cf6"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 100,
+          "zones": [
+            { "from": 0, "to": 30, "color": "#f59e0b" },
+            { "from": 30, "to": 70, "color": "#10b981" },
+            { "from": 70, "to": 100, "color": "#f59e0b" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "lt", "value": 30, "status": "warning", "label": "Too Dry" },
+            { "operator": "between", "min": 30, "max": 40, "status": "success", "label": "Comfortable" },
+            { "operator": "between", "min": 40, "max": 60, "status": "success", "label": "Ideal" },
+            { "operator": "between", "min": 60, "max": 70, "status": "success", "label": "Comfortable" },
+            { "operator": "gt", "value": 70, "status": "warning", "label": "Too Humid" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "battery",
+      "path": "decoded_payload.object.battery",
+      "name": "Battery Level",
+      "unit": "%",
+      "decimals": 0,
+      "defaultWidget": "current-value",
+      "widgets": {
+        "current-value": {
+          "enabled": true,
+          "thresholds": [
+            { "min": 0, "max": 20, "color": "#ef4444", "label": "Low" },
+            { "min": 20, "max": 50, "color": "#f59e0b", "label": "Medium" },
+            { "min": 50, "max": 100, "color": "#10b981", "label": "Good" }
+          ]
+        },
+        "time-series": {
+          "enabled": true,
+          "yAxisMin": 0,
+          "yAxisMax": 100,
+          "showArea": true,
+          "color": "#10b981"
+        },
+        "gauge": {
+          "enabled": true,
+          "min": 0,
+          "max": 100,
+          "zones": [
+            { "from": 0, "to": 20, "color": "#ef4444" },
+            { "from": 20, "to": 50, "color": "#f59e0b" },
+            { "from": 50, "to": 100, "color": "#10b981" }
+          ]
+        },
+        "status": {
+          "enabled": true,
+          "conditions": [
+            { "operator": "gte", "value": 50, "status": "success", "label": "Battery Good" },
+            { "operator": "between", "min": 20, "max": 50, "status": "warning", "label": "Battery Medium" },
+            { "operator": "lt", "value": 20, "status": "error", "label": "Battery Low" }
+          ]
+        }
+      }
+    }
+  ],
+  "widgetTemplates": [
+    {
+      "id": "overview",
+      "name": "Air Quality Overview",
+      "layout": "grid",
+      "defaultSize": {
+        "w": 12,
+        "h": 8
+      },
+      "sections": [
+        {
+          "measurementId": "co2",
+          "displayTypes": [
+            "current-value",
+            "time-series"
+          ]
+        },
+        {
+          "measurementId": "temperature",
+          "displayTypes": [
+            "current-value",
+            "gauge"
+          ]
+        },
+        {
+          "measurementId": "humidity",
+          "displayTypes": [
+            "current-value",
+            "gauge"
+          ]
+        },
+        {
+          "measurementId": "battery",
+          "displayTypes": [
+            "current-value"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "detailed",
+      "name": "Detailed Monitoring",
+      "layout": "grid",
+      "defaultSize": {
+        "w": 12,
+        "h": 10
+      },
+      "sections": [
+        {
+          "measurementId": "co2",
+          "displayTypes": [
+            "current-value",
+            "time-series",
+            "gauge"
+          ]
+        },
+        {
+          "measurementId": "temperature",
+          "displayTypes": [
+            "current-value",
+            "time-series",
+            "gauge"
+          ]
+        },
+        {
+          "measurementId": "humidity",
+          "displayTypes": [
+            "current-value",
+            "time-series",
+            "gauge"
+          ]
+        },
+        {
+          "measurementId": "battery",
+          "displayTypes": [
+            "current-value",
+            "time-series"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gauges",
+      "name": "Gauge View",
+      "layout": "grid",
+      "defaultSize": {
+        "w": 8,
+        "h": 6
+      },
+      "sections": [
+        {
+          "measurementId": "co2",
+          "displayTypes": [
+            "gauge"
+          ]
+        },
+        {
+          "measurementId": "temperature",
+          "displayTypes": [
+            "gauge"
+          ]
+        },
+        {
+          "measurementId": "humidity",
+          "displayTypes": [
+            "gauge"
+          ]
+        },
+        {
+          "measurementId": "battery",
+          "displayTypes": [
+            "gauge"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "compact",
+      "name": "Compact Dashboard",
+      "layout": "grid",
+      "defaultSize": {
+        "w": 6,
+        "h": 4
+      },
+      "sections": [
+        {
+          "measurementId": "co2",
+          "displayTypes": [
+            "current-value"
+          ]
+        },
+        {
+          "measurementId": "temperature",
+          "displayTypes": [
+            "current-value"
+          ]
+        },
+        {
+          "measurementId": "humidity",
+          "displayTypes": [
+            "current-value"
+          ]
+        },
+        {
+          "measurementId": "battery",
+          "displayTypes": [
+            "status"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "co2-focus",
+      "name": "CO2 Monitoring",
+      "layout": "grid",
+      "defaultSize": {
+        "w": 10,
+        "h": 6
+      },
+      "sections": [
+        {
+          "measurementId": "co2",
+          "displayTypes": [
+            "current-value",
+            "time-series",
+            "gauge",
+            "status"
+          ]
+        }
+      ]
+    }
+  ]
+}

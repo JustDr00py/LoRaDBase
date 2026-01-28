@@ -24,12 +24,15 @@ const backupLimiter = rateLimit({
  */
 router.post('/export', requireMasterAuth, backupLimiter, async (req: Request, res: Response) => {
   try {
-    const { includeDeviceTypes = true, saveAutomatic = false, dashboards, settings } = req.body;
+    const { includeDeviceTypes = true, saveAutomatic = false } = req.body;
 
     console.log('📦 Exporting backup...');
 
     // Export servers from database
     const servers = backupRepository.exportServers();
+
+    // Export dashboards from database
+    const dashboards = backupRepository.exportDashboards();
 
     // Export device types if requested
     const deviceTypes = includeDeviceTypes ? await exportDeviceTypes() : [];
@@ -45,8 +48,7 @@ router.post('/export', requireMasterAuth, backupLimiter, async (req: Request, re
       data: {
         servers,
         deviceTypes,
-        ...(dashboards && { dashboards }), // Include dashboards if provided from frontend
-        ...(settings && { settings }), // Include settings if provided from frontend
+        dashboards, // Always include dashboards from database
       },
     };
 
@@ -56,7 +58,7 @@ router.post('/export', requireMasterAuth, backupLimiter, async (req: Request, re
       console.log(`✅ Backup saved automatically: ${filename}`);
     }
 
-    console.log(`✅ Backup exported: ${servers.length} servers, ${deviceTypes.length} device types, dashboards: ${dashboards ? 'yes' : 'no'}`);
+    console.log(`✅ Backup exported: ${servers.length} servers, ${deviceTypes.length} device types, ${dashboards.length} dashboards`);
     return res.json(backup);
   } catch (error: any) {
     console.error('❌ Backup export failed:', error);
@@ -109,6 +111,12 @@ router.post('/import', requireMasterAuth, backupLimiter, async (req: Request, re
       strategy as ImportStrategy
     );
 
+    // Import dashboards
+    const dashboardResult = backupRepository.importDashboards(
+      backup.data.dashboards || [],
+      strategy as ImportStrategy
+    );
+
     // Import device types
     const deviceTypeResult =
       backup.data.deviceTypes && backup.data.deviceTypes.length > 0
@@ -117,16 +125,18 @@ router.post('/import', requireMasterAuth, backupLimiter, async (req: Request, re
 
     const result = {
       servers: serverResult,
+      dashboards: dashboardResult,
       deviceTypes: deviceTypeResult,
     };
 
     console.log(
-      `✅ Import completed: ${serverResult.imported} servers, ${deviceTypeResult.imported} device types`
+      `✅ Import completed: ${serverResult.imported} servers, ${dashboardResult.imported} dashboards, ${deviceTypeResult.imported} device types`
     );
 
-    if (serverResult.errors.length > 0 || deviceTypeResult.errors.length > 0) {
+    if (serverResult.errors.length > 0 || dashboardResult.errors.length > 0 || deviceTypeResult.errors.length > 0) {
       console.warn('⚠️  Import completed with errors:', {
         serverErrors: serverResult.errors,
+        dashboardErrors: dashboardResult.errors,
         deviceTypeErrors: deviceTypeResult.errors,
       });
     }
